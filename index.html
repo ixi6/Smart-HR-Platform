@@ -1,0 +1,2564 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+
+  <!-- Cache-Busting Meta Tags -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  
+  <!-- Kill Switch & Cache-Busting Script -->
+  <script>
+    (async function() {
+      try {
+        // ضع رابط ملف الـ JSON الخاص بك هنا (من GitHub Raw أو Gist)
+        const configUrl = 'https://gist.githubusercontent.com/ixi6/9b2a9877c98bc84e9240366d3cc261b2/raw/gistfile1.txt';
+
+        // Cache-Busting: إضافة طابع زمني عشوائي لمنع الكاش نهائياً من سيرفرات GitHub
+        const ts = new Date().getTime();
+        const fetchUrl = `${configUrl}?v=${ts}`;
+
+        const response = await fetch(fetchUrl, { cache: 'no-store' });
+        if (response.ok) {
+          const text = await response.text();
+          let isKill = false;
+          let msg = 'النظام متوقف حالياً، يرجى التواصل مع المطور Snap:i6_5.';
+          try {
+            const data = JSON.parse(text);
+            // إيقاف النظام إذا كانت القيمة OFF أو false
+            if (data.kill_switch === "OFF" || data.kill_switch === "off" || data.kill_switch === false || 
+                data.killswitch === "OFF" || data.killswitch === "off" || data.killswitch === false ||
+                data.status === "OFF" || data.status === "off" || data.status === false) {
+              isKill = true;
+              if (data.message) msg = data.message;
+            }
+          } catch(e) {
+            // إذا كان الملف يحتوي على نص عادي فقط
+            const cleanText = text.trim().toUpperCase();
+            if (cleanText === "OFF" || cleanText === "FALSE" || cleanText === "0") {
+              isKill = true;
+            }
+          }
+          if (isKill) {
+            // إيقاف التطبيق وإخفاء المحتوى فوراً
+            const renderKill = () => {
+              document.body.innerHTML = `
+                <div style="display:flex; justify-content:center; align-items:center; height:100vh; background:#0f172a; color:#fff; font-family:system-ui,-apple-system,sans-serif; text-align:center; padding:20px; direction:rtl;">
+                  <div style="background:rgba(17,24,39,0.8); padding:40px; border-radius:18px; border:1px solid rgba(255,255,255,0.1); box-shadow:0 20px 50px rgba(0,0,0,0.5);">
+                    <h1 style="color:#ef4444; margin:0 0 15px 0; font-size:1.8rem;">⚠️ النظام متوقف حالياً</h1>
+                    <p style="color:#9ca3af; font-size:1.1rem; margin:0;">${msg}</p>
+                  </div>
+                </div>
+              `;
+            };
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', renderKill);
+            } else {
+              renderKill();
+            }
+          }
+        }
+      } catch (err) {
+        // في حال عدم وجود إنترنت أو خطأ في الرابط، التطبيق يستمر بالعمل طبيعياً
+        console.warn('Kill switch verification bypassed (offline or config not found).');
+      }
+    })();
+  </script>
+
+  <title>حساب الفرق بين تاريخين بالأيام + تجديد الإقامة</title>
+
+  <!-- Favicons محلية متعددة (اختياري) -->
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="mask-icon" href="safari-pinned-tab.svg" color="#22d3ee">
+
+  <style>
+    :root{
+      --bg1:#0f172a; --bg2:#111827;
+      --card:rgba(17,24,39,0.55);
+      --txt:#e5e7eb; --muted:#9ca3af;
+      --acc:#22d3ee; --ok:#a7f3d0;
+      accent-color: var(--acc);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Arial,sans-serif;
+      color:var(--txt);
+      background:
+        radial-gradient(1200px 800px at 20% 10%, #0ea5e944, transparent 60%),
+        radial-gradient(900px 700px at 80% 20%, #22d3ee33, transparent 60%),
+        radial-gradient(1000px 800px at 10% 85%, #818cf833, transparent 60%),
+        linear-gradient(120deg,var(--bg1),var(--bg2));
+      min-height:100%;
+      display:grid; place-items:center; padding:24px;
+      overflow-x:hidden;
+    }
+    .bg-blobs{position:fixed; inset:0; pointer-events:none; z-index:-1}
+    .blob{
+      position:absolute; width:42vmax; height:42vmax; border-radius:50%;
+      filter: blur(60px) saturate(120%); opacity:0.35; will-change: transform;
+      background: radial-gradient(circle at 30% 30%, #22d3ee, #2563eb 60%, transparent 70%);
+      animation: float 22s ease-in-out infinite;
+    }
+    .blob.b2{ top:-10vmax; right:-10vmax; opacity:0.28; background: radial-gradient(circle at 70% 40%, #a78bfa, #22d3ee 60%, transparent 70%); animation-duration:28s; animation-delay:-6s; }
+    .blob.b3{ bottom:-12vmax; left:-12vmax; opacity:0.25; background: radial-gradient(circle at 40% 60%, #34d399, #06b6d4 60%, transparent 70%); animation-duration:32s; animation-delay:-12s; }
+    @keyframes float{ 0%{transform: translate3d(0,0,0) scale(1)} 50%{transform: translate3d(2.5vmax,-2.5vmax,0) scale(1.05)} 100%{transform: translate3d(0,0,0) scale(1)} }
+
+    .card{
+      width:min(820px,100%); position:relative;
+      background: var(--card);
+      border:1px solid rgba(255,255,255,0.10);
+      border-radius:18px; padding:24px 22px;
+      backdrop-filter: blur(14px) saturate(115%);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+    }
+    .heading{display:flex; align-items:center; gap:12px; margin-bottom:6px}
+    h1{margin:0; font-weight:800; font-size:1.35rem; letter-spacing:0.2px}
+    h2{margin:18px 0 10px; font-size:1.1rem}
+    .help{margin:0 0 18px 0; color:var(--muted); font-size:0.95rem}
+    .icon{width:28px; height:28px; flex:none; color:var(--acc); filter: drop-shadow(0 2px 6px rgba(34,211,238,0.35))}
+    .grid{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+    label{display:block; margin-bottom:6px; color:var(--muted); font-size:0.9rem; font-weight:500}
+
+    /* حاوي موضع نسبي لحقل التاريخ وأيقونة اللصق */
+    .date-input-wrapper{ position:relative; display:block; }
+    input[type="date"]{
+      width:100%; padding:12px 50px 12px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.12);
+      background:#0b1220; color:var(--txt); outline:none;
+      transition: border-color .2s ease, box-shadow .2s ease, transform .06s ease;
+      direction: rtl;
+    }
+    input[type="date"]:focus{ border-color:var(--acc); box-shadow:0 0 0 4px rgba(34,211,238,0.18); transform: translateY(-1px); }
+
+    /* ضبط حجم أيقونة التقويم الأصلية */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      position: absolute;
+      right: 26px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      z-index: 10;
+      opacity: 0.7;
+      transition: opacity 0.2s ease;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
+
+    /* أيقونة اللصق بجانب أيقونة التقويم بحجم 18x18 */
+    .paste-icon {
+      position: absolute;
+      right: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      z-index: 20;
+      color: var(--muted);
+      transition: all 0.2s ease;
+      padding: 0;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .paste-icon:hover {
+      color: var(--acc);
+      background: rgba(34, 211, 238, 0.15);
+      transform: translateY(-50%) scale(1.1);
+    }
+    .paste-icon:active {
+      transform: translateY(-50%) scale(0.95);
+      background: rgba(34, 211, 238, 0.25);
+    }
+
+    .result, .panel{ margin-top:18px; padding:16px; border-radius:14px; background:#0b1220cc; border:1px solid rgba(255,255,255,0.10); }
+    .result strong{font-weight:800}
+    .muted{color:var(--muted)}
+    .footer{margin-top:12px; color:var(--muted); font-size:0.85rem}
+
+    .error, .error strong{ color:#ef4444 !important; }
+
+    .seg{display:flex; gap:8px; flex-wrap:wrap}
+    .seg input{position:absolute; opacity:0; pointer-events:none}
+    .seg label{
+      user-select:none; padding:8px 12px; border-radius:999px;
+      border:1px solid rgba(255,255,255,0.22);
+      cursor:pointer; background:#0b1220; color:#ffffff; transition: all .15s ease;
+    }
+    .seg input:checked + label{
+      border-color: rgba(34,211,238,0.55);
+      background: rgba(34,211,238,0.12);
+      color:#000000;
+      box-shadow: 0 6px 20px rgba(34,211,238,0.22), inset 0 0 0 1px rgba(255,255,255,0.15);
+      backdrop-filter: blur(4px) saturate(120%);
+    }
+
+    .note{display:flex; gap:8px; align-items:center; color:#111827; background:linear-gradient(90deg,#fef3c7,#fde68a); padding:10px 12px; border-radius:12px}
+    .note .dot{width:8px; height:8px; background:#ca8a04; border-radius:50%}
+
+    .label{ color: var(--txt); }
+    .val, .val strong{ color:#34d399; }
+
+    .copy-btn{
+      background: var(--acc); color: #111827; border: none; border-radius: 6px;
+      padding: 4px 8px; font-size: 0.75rem; cursor: pointer; margin-top:8px;
+      transition: all 0.2s ease;
+    }
+    .copy-btn:hover{ background: #0ea5e9; transform: translateY(-1px); }
+
+    
+    @media (prefers-reduced-motion: reduce){
+      .blob, *{ animation:none !important; transition:none !important; }
+    }
+  
+    /* Header Action Buttons Container */
+    .header-actions { display: flex; gap: 8px; margin-right: auto; align-items: center; z-index: 10; }
+    .header-action-btn {
+        background: var(--card); border: 1px solid rgba(255,255,255,0.1); color: var(--txt);
+        width: 40px; height: 40px; border-radius: 12px; cursor: pointer;
+        display: grid; place-items: center; transition: all 0.2s; backdrop-filter: blur(10px);
+    }
+    .header-action-btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); transform: translateY(-2px); }
+    .clear-btn-danger:hover { color: #ef4444 !important; border-color: #ef4444 !important; background: rgba(239, 68, 68, 0.1) !important; }
+
+    /* Settings Modal */
+    .modal-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+        display: none; place-items: center; z-index: 100; opacity: 0; transition: opacity 0.2s;
+    }
+    .modal-overlay.active { display: grid; opacity: 1; }
+    .modal-content {
+        background: var(--bg2); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;
+        padding: 24px; width: 90%; max-width: 400px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+        transform: scale(0.95); transition: transform 0.2s;
+    }
+    .modal-overlay.active .modal-content { transform: scale(1); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-title { margin: 0; font-size: 1.25rem; font-weight: 600; color: var(--acc); }
+    .close-btn { background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px; border-radius: 50%; }
+    .close-btn:hover { color: var(--txt); background: rgba(255,255,255,0.1); }
+    .setting-group { margin-bottom: 16px; }
+    .setting-group label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: var(--muted); }
+    .setting-group input { width: 100%; }
+    .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
+    .btn-save { flex: 1; background: var(--acc); color: #000; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    .btn-save:hover { filter: brightness(1.1); }
+    .btn-cancel { flex: 1; background: transparent; color: var(--txt); border: 1px solid rgba(255,255,255,0.2); padding: 10px; border-radius: 8px; cursor: pointer; }
+    .btn-cancel:hover { background: rgba(255,255,255,0.05); }
+
+  
+
+    
+
+    /* Dark theme overrides (to override prefers-color-scheme: light in the base file) */
+    html[data-theme="dark"]{
+      --bg1:#0f172a; --bg2:#111827;
+      --card:rgba(17,24,39,0.55);
+      --txt:#e5e7eb; --muted:#9ca3af;
+      --acc:#22d3ee; --ok:#a7f3d0;
+      accent-color: var(--acc);
+    }
+    html[data-theme="dark"] body{
+      background:
+        radial-gradient(1200px 800px at 20% 10%, #0ea5e944, transparent 60%),
+        radial-gradient(900px 700px at 80% 20%, #22d3ee33, transparent 60%),
+        radial-gradient(1000px 800px at 10% 85%, #818cf833, transparent 60%),
+        linear-gradient(120deg,var(--bg1),var(--bg2));
+    }
+
+    /* Light theme overrides */
+    html[data-theme="light"]{
+      --bg1:#f8fafc; --bg2:#eef2ff;
+      --card:rgba(255,255,255,0.75);
+      --txt:#0f172a; --muted:#475569;
+      --acc:#0891b2; --ok:#059669;
+      accent-color: var(--acc);
+    }
+    html[data-theme="light"] body{
+      background:
+        radial-gradient(1200px 800px at 20% 10%, #0ea5e922, transparent 60%),
+        radial-gradient(900px 700px at 80% 20%, #22d3ee22, transparent 60%),
+        radial-gradient(1000px 800px at 10% 85%, #818cf822, transparent 60%),
+        linear-gradient(120deg,var(--bg1),var(--bg2));
+    }
+
+    /* Fallback toast (if missing in base) */
+    .toast-host{ position:fixed; inset:auto 16px 16px 16px; display:flex; justify-content:center; pointer-events:none; z-index:9999; }
+    .toast{ pointer-events:auto; background:rgba(17,24,39,0.92); color:#fff; border:1px solid rgba(255,255,255,0.12); padding:10px 12px; border-radius:12px; min-width:260px; max-width:520px; box-shadow:0 18px 40px rgba(0,0,0,.35); backdrop-filter: blur(10px); }
+    html[data-theme="light"] .toast{ background:rgba(255,255,255,0.92); color:#0f172a; border-color: rgba(15,23,42,0.12); }
+    .toast .t-title{ font-weight:700; margin:0 0 4px 0; font-size:14px; }
+    .toast .t-msg{ margin:0; font-size:13px; opacity:0.9; }
+
+  
+
+    /* Professional Design System */
+    :root{
+      --radius: 18px; --radius-sm: 12px;
+      --border: rgba(255,255,255,0.1); --border-2: rgba(255,255,255,0.16);
+      --shadow: 0 18px 55px rgba(0,0,0,0.45); --shadow-soft: 0 10px 30px rgba(0,0,0,0.25);
+      --glass: rgba(17, 24, 39, 0.55); --glass-2: rgba(17, 24, 39, 0.70);
+      --accent-2: #38bdf8; --success: #22c55e; --warning: #f59e0b; --danger: #ef4444; --focus: rgba(34,211,238,0.3);
+    }
+
+    html[data-theme="dark"]{
+      --bg1:#0b1224; --bg2:#0b132d; --card:var(--glass); --txt:#e7eef7; --muted:#a6b3c3; --acc:#22d3ee; --ok:#86efac;
+      --border: rgba(255,255,255,0.1); --border-2: rgba(255,255,255,0.16); --shadow: 0 18px 55px rgba(0,0,0,0.50);
+    }
+    html[data-theme="dark"] body{
+      background: radial-gradient(1200px 800px at 20% 10%, rgba(56,189,248,0.18), transparent 60%),
+                  radial-gradient(900px 700px at 80% 20%, rgba(34,211,238,0.14), transparent 60%),
+                  radial-gradient(1000px 800px at 10% 85%, rgba(167,139,250,0.10), transparent 60%),
+                  linear-gradient(120deg,var(--bg1),var(--bg2));
+    }
+    html[data-theme="light"]{
+      --bg1:#f7fafc; --bg2:#eef2ff; --card:rgba(255,255,255,0.78); --txt:#0b1224; --muted:#334155; --acc:#0891b2; --ok:#16a34a;
+      --border: rgba(15,23,42,0.1); --border-2: rgba(15,23,42,0.16); --shadow: 0 18px 55px rgba(2,6,23,0.12);
+    }
+    html[data-theme="light"] body{
+      background: radial-gradient(1200px 800px at 20% 10%, rgba(34,211,238,0.14), transparent 60%),
+                  radial-gradient(900px 700px at 80% 20%, rgba(99,102,241,0.12), transparent 60%),
+                  radial-gradient(1000px 800px at 10% 85%, rgba(14,165,233,0.10), transparent 60%),
+                  linear-gradient(120deg,var(--bg1),var(--bg2));
+    }
+
+    .panel, .card, .box, .result, .result-box, .glass, .header-action-btn, .modal-content{ border-radius: var(--radius) !important; }
+    input, .date-input{ border-radius: var(--radius-sm) !important; outline: none !important; }
+    input:focus, .date-input:focus{ border-color: var(--acc) !important; box-shadow: 0 0 0 4px var(--focus) !important; }
+    .header-action-btn{ background: var(--card) !important; border: 1px solid var(--border) !important; box-shadow: var(--shadow-soft); transition: all 0.2s; }
+    .header-action-btn:hover{ border-color: var(--border-2) !important; transform: translateY(-2px); }
+
+    
+    html[data-theme="light"] input[type="date"] { background: #ffffff; color: var(--txt); border-color: rgba(15,23,42,0.15); }
+    html[data-theme="light"] .result, html[data-theme="light"] .panel { background: rgba(255,255,255,0.85); border-color: rgba(15,23,42,0.1); }
+    html[data-theme="light"] .card { border-color: rgba(15,23,42,0.1); }
+    html[data-theme="light"] .seg label { border-color: rgba(15,23,42,0.1); background: #f8fafc; color: var(--muted); }
+    html[data-theme="light"] .seg input:checked + label { border-color: var(--acc); background: rgba(8,145,178,0.1); color: var(--txt); font-weight: 700; }
+    html[data-theme="light"] .note { color: var(--txt); }
+    html[data-theme="light"] .copy-btn { background: #e2e8f0; color: var(--txt); border: 1px solid #cbd5e1; }
+    html[data-theme="light"] .copy-btn:hover { background: #cbd5e1; }
+
+    /* Make dark mode seg explicitly better */
+    html[data-theme="dark"] .seg label { background: rgba(15,23,42,0.5); color: var(--muted); }
+    html[data-theme="dark"] .seg input:checked + label { background: rgba(34,211,238,0.15); color: #fff; border-color: var(--acc); }
+    html[data-theme="dark"] input[type="date"] { background: rgba(11,18,32,0.8); color: var(--txt); border-color: rgba(255,255,255,0.15); }
+
+    
+    html[data-theme="light"] .icon { filter: drop-shadow(0 2px 6px rgba(8,145,178,0.25)); }
+    html[data-theme="light"] .paste-icon { color: var(--muted); }
+    html[data-theme="light"] .paste-icon:hover { background: rgba(8,145,178,0.1); color: var(--acc); }
+
+    
+    /* Ensure clear text in dark mode */
+    html[data-theme="dark"] body { color: #f8fafc; }
+    html[data-theme="dark"] label { color: #94a3b8; font-weight: 600; }
+    html[data-theme="dark"] input[type="date"] {
+      background: rgba(15, 23, 42, 0.85);
+      color: #f8fafc;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    html[data-theme="dark"] input[type="date"]::-webkit-datetime-edit { color: #f8fafc; }
+    :is(html[data-theme="dark"], html[data-theme="ocean"], html[data-theme="forest"], html[data-theme="sunset"]) input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.8);
+      opacity: 0.8;
+    }
+    html[data-theme="dark"] .paste-icon { color: #94a3b8; }
+    html[data-theme="dark"] .paste-icon:hover { color: #38bdf8; }
+
+    /* Ensure light mode is also super crisp */
+    html[data-theme="light"] body { color: #0f172a; }
+    html[data-theme="light"] label { color: #475569; font-weight: 600; }
+    html[data-theme="light"] input[type="date"]::-webkit-datetime-edit { color: #0f172a; }
+
+    /* Modal Polish */
+    .modal-overlay{ background: rgba(2,6,23,0.5) !important; backdrop-filter: blur(10px) !important; }
+    .modal-content{ background: var(--card) !important; border: 1px solid var(--border) !important; box-shadow: var(--shadow); backdrop-filter: blur(20px); }
+
+    /* Toast Redesign */
+    .toast-host{ position: fixed; left: 16px; right: 16px; bottom: 16px; display: flex; justify-content: center; pointer-events: none; z-index: 9999; }
+    .toast-stack{ width: min(480px, 100%); display: flex; flex-direction: column; gap: 8px; }
+    .toast{
+      pointer-events: auto; display: flex; gap: 12px; align-items: center; padding: 14px 16px; border-radius: 16px;
+      background: color-mix(in oklab, var(--card) 95%, white); border: 1px solid var(--border); box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(14px); position: relative; overflow: hidden; animation: tIn .2s ease-out forwards;
+    }
+    html[data-theme="dark"] .toast { background: rgba(17,24,39,0.8); }
+    .toast::before{ content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 4px; background: var(--acc); }
+    .toast.success::before{ background: var(--success); }
+    .toast.error::before{ background: var(--danger); }
+    .toast-ico{ width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; background: rgba(0,0,0,0.05); flex-shrink: 0; }
+    .toast.success .toast-ico{ color: var(--success); }
+    .toast.error .toast-ico{ color: var(--danger); }
+    .t-title{ font-weight: 700; font-size: 14px; margin: 0; color: var(--txt); }
+    .t-msg{ font-size: 13px; margin: 0; color: var(--muted); }
+    .t-close{ margin-right: auto; background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px; border-radius: 8px; }
+    .t-close:hover{ background: rgba(0,0,0,0.05); color: var(--txt); }
+    @keyframes tIn{ from{transform:translateY(10px); opacity:0;} to{transform:translateY(0); opacity:1;} }
+    @keyframes tOut{ from{opacity:1;} to{opacity:0; transform:scale(0.95);} }
+
+  
+    .months-display {
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: rgba(249, 115, 22, 0.1);
+      border: 1px solid rgba(249, 115, 22, 0.2);
+      border-radius: 10px;
+      font-size: 13px;
+      color: var(--warning);
+    }
+    html[data-theme="light"] .months-display {
+      background: rgba(249, 115, 22, 0.08);
+    }
+
+  
+    .side-months-note {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 10px;
+      background: rgba(245, 158, 11, 0.10);
+      border: 1px solid rgba(245, 158, 11, 0.22);
+      color: #b45309;
+      font-weight: 700;
+      line-height: 1.5;
+      min-width: 220px;
+      text-align: center;
+    }
+    html[data-theme="dark"] .side-months-note {
+      background: rgba(245, 158, 11, 0.14);
+      border-color: rgba(245, 158, 11, 0.26);
+      color: #fbbf24;
+    }
+    .side-months-note.valid {
+      background: rgba(34, 197, 94, 0.10);
+      border-color: rgba(34, 197, 94, 0.22);
+      color: #15803d;
+    }
+    html[data-theme="dark"] .side-months-note.valid {
+      background: rgba(34, 197, 94, 0.14);
+      border-color: rgba(34, 197, 94, 0.26);
+      color: #86efac;
+    }
+    .side-months-note.today {
+      background: rgba(239, 68, 68, 0.10);
+      border-color: rgba(239, 68, 68, 0.22);
+      color: #b91c1c;
+    }
+    html[data-theme="dark"] .side-months-note.today {
+      background: rgba(239, 68, 68, 0.14);
+      border-color: rgba(239, 68, 68, 0.26);
+      color: #fca5a5;
+    }
+
+  
+    /* Footer Credits */
+    .footer-credits {
+      margin-top: 24px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.95rem;
+      padding: 12px 24px;
+      border-radius: var(--radius-sm);
+      background: color-mix(in oklab, var(--card) 60%, transparent);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(12px);
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    html[data-theme="light"] .footer-credits {
+      background: rgba(255, 255, 255, 0.65);
+      border-color: var(--border);
+    }
+    .footer-credits span {
+      color: var(--acc);
+      font-weight: 800;
+      margin: 0 4px;
+    }
+    .footer-credits:hover {
+      border-color: var(--acc);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(34,211,238,0.15);
+    }
+
+  
+    .footer-email {
+      color: var(--muted);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      transition: all 0.2s ease;
+      direction: ltr;
+    }
+    .footer-email:hover {
+      color: var(--acc);
+      transform: translateY(-1px);
+      text-shadow: 0 0 8px rgba(34,211,238,0.4);
+    }
+    html[data-theme="light"] .footer-email:hover {
+      text-shadow: none;
+    }
+    @media (max-width: 600px) {
+      .footer-sep { display: none; }
+      .footer-credits > div { flex-direction: column; gap: 8px; }
+    }
+
+  
+    /* --- Top Navigation Tabs --- */
+    .top-tabs-container {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .top-tabs-container::-webkit-scrollbar { display: none; }
+
+    .top-tab {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+    .top-tab:hover {
+      background: rgba(255,255,255,0.05);
+      color: var(--txt);
+      border-color: var(--border-2);
+    }
+    html[data-theme="light"] .top-tab:hover { background: rgba(0,0,0,0.03); }
+
+    .top-tab.active {
+      background: var(--acc);
+      color: #000;
+      border-color: transparent;
+      box-shadow: 0 4px 15px rgba(34,211,238,0.25);
+    }
+    html[data-theme="light"] .top-tab.active { color: #fff; box-shadow: 0 4px 15px rgba(8,145,178,0.3); }
+    html[data-theme="ocean"] .top-tab.active { color: #000; box-shadow: 0 4px 15px rgba(56,189,248,0.25); }
+    html[data-theme="forest"] .top-tab.active { color: #000; box-shadow: 0 4px 15px rgba(16,185,129,0.25); }
+    html[data-theme="sunset"] .top-tab.active { color: #000; box-shadow: 0 4px 15px rgba(251,113,133,0.25); }
+
+    .tab-content { display: none; animation: fadeIn 0.3s ease-out; }
+    .tab-content.active { display: block; }
+
+    /* Extra tools styling */
+    .calc-box {
+      background: rgba(0,0,0,0.15);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    html[data-theme="light"] .calc-box { background: rgba(255,255,255,0.5); }
+
+    .result-big {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--ok);
+      margin: 10px 0;
+      text-align: center;
+    }
+    .result-sub { text-align: center; color: var(--muted); font-size: 0.95rem; }
+
+    .input-group { margin-bottom: 16px; }
+    .input-group label { display: block; margin-bottom: 8px; color: var(--muted); font-weight: 600; font-size: 0.9rem; }
+    .input-group input, .input-group select {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(15,23,42,0.4);
+      color: var(--txt);
+      outline: none;
+      font-family: inherit;
+      font-size: 1rem;
+    }
+    html[data-theme="light"] .input-group input, html[data-theme="light"] .input-group select { background: #fff; }
+    .input-group select { cursor: pointer; appearance: none; }
+
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      background: var(--acc);
+      color: #000;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-top: 10px;
+    }
+    .btn-primary:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(34,211,238,0.3); }
+    html[data-theme="light"] .btn-primary { color: #fff; }
+
+  
+    /* --- Fix theme dropdown layout --- */
+    .theme-dropdown-wrapper {
+      position: relative !important;
+      display: inline-block !important;
+      z-index: 5000 !important;
+    }
+    .theme-dropdown {
+      position: absolute !important;
+      top: calc(100% + 10px) !important;
+      right: 0 !important;
+      min-width: 190px !important;
+      background: var(--card) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 14px !important;
+      padding: 8px !important;
+      display: none !important;
+      flex-direction: column !important;
+      gap: 4px !important;
+      box-shadow: 0 18px 40px rgba(0,0,0,.28) !important;
+      backdrop-filter: blur(16px) saturate(120%) !important;
+      z-index: 6000 !important;
+    }
+    .theme-dropdown.show {
+      display: flex !important;
+    }
+    .theme-opt {
+      background: transparent !important;
+      border: none !important;
+      color: var(--txt) !important;
+      text-align: right !important;
+      padding: 10px 12px !important;
+      border-radius: 10px !important;
+      cursor: pointer !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 12px !important;
+      font-family: inherit !important;
+      font-size: 0.9rem !important;
+      font-weight: 600 !important;
+      width: 100% !important;
+    }
+    .theme-opt:hover {
+      background: rgba(255,255,255,0.08) !important;
+    }
+    html[data-theme="light"] .theme-opt:hover {
+      background: rgba(0,0,0,0.05) !important;
+    }
+    .t-dot {
+      width: 14px !important;
+      height: 14px !important;
+      border-radius: 50% !important;
+      flex-shrink: 0 !important;
+      border: 1px solid rgba(255,255,255,0.25) !important;
+    }
+    .header-actions {
+      position: relative !important;
+      z-index: 4000 !important;
+    }
+    .top-tabs-container, .tab-content, .calc-box, .result, .panel {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* --- NEW PROFESSIONAL THEMES --- */
+    html[data-theme="ocean"] {
+      --bg1: #0f172a;
+      --bg2: #082f49;
+      --card: rgba(8, 47, 73, 0.65);
+      --txt: #e0f2fe;
+      --muted: #7dd3fc;
+      --acc: #38bdf8;
+      --ok: #34d399;
+      --border: rgba(56, 189, 248, 0.2);
+    }
+    html[data-theme="ocean"] body {
+      background: radial-gradient(1200px 800px at 20% 10%, rgba(56,189,248,0.15), transparent 60%),
+                  radial-gradient(900px 700px at 80% 20%, rgba(14,165,233,0.15), transparent 60%),
+                  linear-gradient(120deg, var(--bg1), var(--bg2));
+    }
+
+    html[data-theme="forest"] {
+      --bg1: #022c22;
+      --bg2: #064e3b;
+      --card: rgba(6, 78, 59, 0.65);
+      --txt: #d1fae5;
+      --muted: #6ee7b7;
+      --acc: #10b981;
+      --ok: #fcd34d;
+      --border: rgba(16, 185, 129, 0.2);
+    }
+    html[data-theme="forest"] body {
+      background: radial-gradient(1200px 800px at 20% 10%, rgba(16,185,129,0.15), transparent 60%),
+                  radial-gradient(900px 700px at 80% 20%, rgba(52,211,153,0.15), transparent 60%),
+                  linear-gradient(120deg, var(--bg1), var(--bg2));
+    }
+
+    html[data-theme="sunset"] {
+      --bg1: #2a0410;
+      --bg2: #4c0519;
+      --card: rgba(76, 5, 25, 0.65);
+      --txt: #ffe4e6;
+      --muted: #fda4af;
+      --acc: #fb7185;
+      --ok: #fbbf24;
+      --border: rgba(251, 113, 133, 0.2);
+    }
+    html[data-theme="sunset"] body {
+      background: radial-gradient(1200px 800px at 20% 10%, rgba(251,113,133,0.15), transparent 60%),
+                  radial-gradient(900px 700px at 80% 20%, rgba(244,63,94,0.15), transparent 60%),
+                  linear-gradient(120deg, var(--bg1), var(--bg2));
+    }
+
+    html[data-theme="ocean"] input[type="date"], html[data-theme="forest"] input[type="date"], html[data-theme="sunset"] input[type="date"] {
+      background: rgba(15, 23, 42, 0.4); color: var(--txt); border: 1px solid var(--border);
+    }
+
+    /* HRSD Style Overrides */
+    .hrsd-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      direction: rtl;
+    }
+    @media (max-width: 768px) {
+      .hrsd-grid { grid-template-columns: 1fr; }
+    }
+    .hrsd-group {
+      margin-bottom: 20px;
+    }
+    .hrsd-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 700;
+      color: var(--txt);
+      font-size: 0.95rem;
+    }
+    .hrsd-group label span { color: #e11d48; margin-right: 4px; }
+
+    .hrsd-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+    html[data-theme="light"] .hrsd-input-wrapper { background: #f8f9fa; border-color: #e5e7eb; }
+
+    .hrsd-input-wrapper:focus-within {
+      border-color: var(--acc);
+      box-shadow: 0 0 0 3px rgba(34,211,238,0.15);
+    }
+
+    .hrsd-input-wrapper input, .hrsd-input-wrapper select {
+      flex: 1;
+      width: 100%;
+      border: none;
+      background: transparent;
+      padding: 14px 16px;
+      color: var(--txt);
+      font-size: 1rem;
+      font-family: inherit;
+      outline: none;
+      text-align: right;
+      appearance: none;
+    }
+
+    .hrsd-select-icon {
+      position: absolute;
+      left: 16px;
+      pointer-events: none;
+      color: var(--muted);
+    }
+
+    .hrsd-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 10px;
+      margin-bottom: 30px;
+    }
+
+    .hrsd-btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .hrsd-btn-primary {
+      background: #f1f5f9;
+      color: #94a3b8;
+      border: 1px solid #e2e8f0;
+    }
+    .hrsd-btn-primary.active {
+      background: var(--acc);
+      color: #000;
+      border-color: var(--acc);
+    }
+    html[data-theme="light"] .hrsd-btn-primary.active { color: #fff; }
+
+    .hrsd-btn-secondary {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .hrsd-btn-secondary:hover { background: rgba(255,255,255,0.05); }
+
+    .hrsd-result-box {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 30px;
+      text-align: right;
+      background: rgba(0,0,0,0.1);
+      display: none;
+      position: relative;
+    }
+    html[data-theme="light"] .hrsd-result-box { background: #fff; border-color: #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+
+    .hrsd-result-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--txt);
+      margin-bottom: 8px;
+    }
+    .hrsd-result-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--txt);
+    }
+    .hrsd-disclaimer {
+      margin-top: 16px;
+      text-align: right;
+      font-size: 0.85rem;
+      color: #d97706; 
+    }
+
+  
+    
+    body::after {
+      content: "";
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 50vw;
+      height: 50vh;
+      background-image: url('https://i.imgur.com/BqAZCNN.png');
+      background-size: contain;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 0.1;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+
+    body::after {
+      content: "";
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 50vw;
+      height: 50vh;
+      background-image: url('https://i.imgur.com/BqAZCNN.png');
+      background-size: contain;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 0.1;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+
+
+    
+    
+    
+
+    .hijri-input {
+      background-color: transparent !important;
+      color: var(--txt) !important;
+    }
+
+  </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+  // --- New Enterprise Features ---
+
+  // Settings Logic
+  function openSettings() {
+      document.getElementById('iqamaCostInput').value = parseFloat(localStorage.getItem("app-iqama-cost")) || 1.84;
+      document.getElementById('visaCostInput').value = parseFloat(localStorage.getItem("app-visa-cost")) || 29.23;
+      document.getElementById('settingsModal').classList.add('active');
+  }
+
+  function closeSettings() {
+      document.getElementById('settingsModal').classList.remove('active');
+  }
+
+  function saveSettings() {
+      const newIqama = parseFloat(document.getElementById('iqamaCostInput').value) || 1.84;
+      const newVisa = parseFloat(document.getElementById('visaCostInput').value) || 29.23;
+      localStorage.setItem("app-iqama-cost", newIqama.toString());
+      localStorage.setItem("app-visa-cost", newVisa.toString());
+      closeSettings();
+
+      // Trigger recalculation for all existing inputs
+      for(let i=1; i<=5; i++) {
+          if(document.getElementById('startDate'+i).value && document.getElementById('endDate'+i).value) calcDateDiff(i);
+          if(document.getElementById('visaEnd'+i).value && document.getElementById('visaReturn'+i).value) calcVisa(i);
+      }
+      showToast('تم حفظ الإعدادات وتحديث النتائج', 'success');
+  }
+
+  // Clear All Logic
+  window.clearAllFields = function() {
+      const inputs = document.querySelectorAll('input[type="date"]');
+      inputs.forEach(input => input.value = '');
+
+      for(let i=1; i<=5; i++) {
+          let r = document.getElementById('result'+i); if(r) r.style.display = 'none';
+          let v = document.getElementById('visaOut'+i); if(v) v.style.display = 'none';
+          let e = document.getElementById('renewOut'+i); if(e) e.style.display = 'none';
+      }
+      showToast('تم تفريغ جميع الحقول بنجاح', 'success');
+  };
+
+  // Export XLSX Logic
+  
+  // Export CSV Logic (No external libraries needed, 100% offline and instant)
+  
+  // تصدير كملف Excel (.xls) مدمج بالكامل (لا يحتاج نت أو مكتبات)
+  
+  // تصدير كملف Excel (مدمج وآمن ضد الحظر)
+  
+  // Export XLSX Logic
+  
+window.exportToXLSX = function() {
+    try {
+        if(typeof XLSX === 'undefined') {
+            showToast('جاري تحميل مكتبة التصدير، يرجى المحاولة بعد قليل...', 'error');
+            return;
+        }
+        const wb = XLSX.utils.book_new();
+        let data = [];
+
+        // قسم تجديد الإقامة
+        let hasIqama = false;
+        for (let i = 1; i <= 5; i++) {
+            let endDate = document.getElementById('startDate'+i)?.value; // تاريخ انتهاء الإقامة
+            let startDate = document.getElementById('endDate'+i)?.value; // تاريخ المباشرة
+            let res = document.getElementById('result'+i);
+            if(endDate && startDate && res && res.style.display !== 'none') {
+                if(!hasIqama) {
+                    data.push(['القسم', 'الرقم', 'تاريخ انتهاء الإقامة', 'تاريخ المباشرة', 'الفرق باليوم', 'التكلفة بالريال']);
+                    hasIqama = true;
+                }
+                let textDays = res.querySelector('.val strong')?.innerText || '0';
+                let costs = res.querySelectorAll('.val strong');
+                let textCost = costs.length > 1 ? costs[1].innerText : '0';
+                data.push(['تجديد إقامة', i, endDate, startDate, convertArabicToNumber(textDays), convertArabicToNumber(textCost)]);
+            }
+        }
+
+        // فاصل بين الأقسام (تم تعديله لحل مشكلة تخطي الأعمدة في الإكسل)
+        if(hasIqama) {
+            data.push(['', '', '', '', '', '']); 
+        }
+
+        // قسم تمديد التأشيرة
+        let hasVisa = false;
+        for (let i = 1; i <= 5; i++) {
+            let endVisa = document.getElementById('visaEnd'+i)?.value; // تاريخ انتهاء الإجازة
+            let returnDate = document.getElementById('visaReturn'+i)?.value; // تاريخ العودة
+            let res = document.getElementById('visaOut'+i);
+            
+            if(endVisa && returnDate && res && res.style.display !== 'none') {
+                if(!hasVisa) {
+                    data.push(['القسم', 'الرقم', 'تاريخ انتهاء الإجازة', 'تاريخ العودة', 'الفرق باليوم', 'التكلفة بالريال']);
+                    hasVisa = true;
+                }
+                let textDays = res.querySelector('.val strong')?.innerText || '0';
+                let costs = res.querySelectorAll('.val strong');
+                let textCost = costs.length > 1 ? costs[1].innerText : '0';
+                data.push(['تمديد تأشيرة', i, endVisa, returnDate, convertArabicToNumber(textDays), convertArabicToNumber(textCost)]);
+            }
+        }
+
+        // التحقق من وجود بيانات
+        if(data.length === 0 || (data.length === 1 && data[0][0] === '')) {
+            showToast('لا توجد بيانات لتصديرها، يرجى إدخال التواريخ أولاً', 'error');
+            return;
+        }
+
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        ws['!cols'] = [{wch: 15}, {wch: 8}, {wch: 22}, {wch: 22}, {wch: 15}, {wch: 15}];
+        if(!ws['!views']) ws['!views'] = [];
+        ws['!views'][0] = {rightToLeft: true};
+
+        XLSX.utils.book_append_sheet(wb, ws, 'التكاليف');
+        const today = new Date().toISOString().split('T')[0];
+        XLSX.writeFile(wb, `التكاليف_${today}.xlsx`);
+        showToast('تم التصدير بنجاح', 'success');
+    } catch(err) {
+        console.error(err);
+        showToast('حدث خطأ أثناء التصدير', 'error');
+    }
+};
+;
+;
+;
+;
+
+  function convertArabicToNumber(str) {
+      if(!str) return 0;
+      const ar = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+      const en = ['0','1','2','3','4','5','6','7','8','9'];
+      let s = String(str);
+      for(let i=0; i<10; i++) s = s.replace(new RegExp(ar[i], 'g'), en[i]);
+      s = s.replace(/[,،]/g, '').replace(/٫/g, '.').replace(/[^0-9.-]/g, '');
+      return isNaN(parseFloat(s)) ? 0 : parseFloat(s);
+  }
+
+</script>
+</head>
+<body>
+  <div class="bg-blobs" aria-hidden="true">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+  </div>
+
+  <main class="card" role="main" aria-labelledby="title">
+
+    <div class="heading" style="margin-bottom:15px; justify-content:flex-end;">
+    <div class="header-actions">
+        <!-- Theme Toggle -->
+<!-- قائمة الثيمات الاحترافية -->
+<div class="theme-dropdown-wrapper" style="position: relative;">
+  <button onclick="toggleThemeMenu(event)" class="header-action-btn" title="تغيير المظهر" aria-label="تغيير المظهر">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2a10 10 0 0 0-10 10c0 5.5 4.5 10 10 10a2 2 0 0 0 2-2c0-1.1-.9-2-2-2-.5 0-1-.2-1.4-.6-.4-.4-.6-.9-.6-1.4 0-1.1.9-2 2-2h1.5c3.6 0 6.5-2.9 6.5-6.5C21 6.4 17 2 12 2z"></path>
+      <circle cx="7.5" cy="10.5" r=".5" fill="currentColor"></circle>
+      <circle cx="11.5" cy="7.5" r=".5" fill="currentColor"></circle>
+      <circle cx="16.5" cy="10.5" r=".5" fill="currentColor"></circle>
+    </svg>
+  </button>
+  
+  <div id="theme-dropdown" class="theme-dropdown">
+    <button class="theme-opt" onclick="setTheme('dark')">
+      <span class="t-dot" style="background:#0f172a"></span> الوضع الليلي (الافتراضي)
+    </button>
+    <button class="theme-opt" onclick="setTheme('light')">
+      <span class="t-dot" style="background:#f8fafc"></span> الوضع النهاري
+    </button>
+    <button class="theme-opt" onclick="setTheme('ocean')">
+      <span class="t-dot" style="background:#0ea5e9"></span> محيط أزرق
+    </button>
+    <button class="theme-opt" onclick="setTheme('forest')">
+      <span class="t-dot" style="background:#10b981"></span> غابة خضراء
+    </button>
+    <button class="theme-opt" onclick="setTheme('sunset')">
+      <span class="t-dot" style="background:#fb7185"></span> غروب دافئ
+    </button>
+  </div>
+</div>
+        <!-- Settings -->
+        <button onclick="openSettings()" class="header-action-btn" title="الإعدادات (تعديل الرسوم)" aria-label="الإعدادات">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        </button>
+        <!-- Export XLSX -->
+        <button onclick="exportToXLSX()" class="header-action-btn" title="تصدير النتائج Excel (XLSX)" aria-label="تصدير Excel">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        </button>
+        <!-- Clear All -->
+        <button onclick="clearAllFields()" class="header-action-btn clear-btn-danger" title="مسح جميع الحقول" aria-label="مسح الكل">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        </button>
+
+    </div>
+
+    </div>
+    
+    <!-- Top Navigation Tabs -->
+    <div class="top-tabs-container">
+      <button class="top-tab active" onclick="switchInnerTab('content-original', this)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        الإقامات والتأشيرات
+      </button>
+      <button class="top-tab" onclick="switchInnerTab('content-gov', this)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+        الرسوم الحكومية
+      </button>
+      <button class="top-tab" onclick="switchInnerTab('content-eos', this)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+        نهاية الخدمة
+      </button>
+      <button class="top-tab" onclick="switchInnerTab('content-converter', this)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+        تحويل التاريخ
+      </button>
+    </div>
+
+<div id="content-original" class="tab-content active">
+<p class="help" id="basicHelpText">أدخل (تاريخ انتهاء الإقامة) و (تاريخ مباشرة الموظف)، تُعرض النتيجة كمجموع أيام وبصيغة سنوات/أشهر/أيام. بند التكلفة: (تكاليف الرسوم التي يتحملها الموظف (<span id="basicHelpRate">1.84</span> × الأيام))</p>
+
+    <!-- القسم الأول: 5 خانات مع أيقونات اللصق -->
+    <div class="grid">
+      <div>
+        <label for="startDate1">تاريخ انتهاء الإقامة 1</label>
+        <div class="date-input-wrapper">
+          <input id="startDate1" type="date" />
+          <svg class="paste-icon" onclick="pasteFromClipboard('startDate1')" viewBox="0 0 24 24" title="لصق من الحافظة">
+            <path fill="currentColor" d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3Z"/>
+          </svg>
+        </div>
+      </div>
+      <div>
+        <label for="endDate1">تاريخ المباشرة 1</label>
+        <div class="date-input-wrapper">
+          <input id="endDate1" type="date" />
+          <svg class="paste-icon" onclick="pasteFromClipboard('endDate1')" viewBox="0 0 24 24" title="لصق من الحافظة">
+            <path fill="currentColor" d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3Z"/>
+          </svg>
+        </div>
+      </div>
+
+      <div>
+        <label for="startDate2">تاريخ انتهاء الإقامة 2</label>
+        <div class="date-input-wrapper">
+          <input id="startDate2" type="date" />
+          <svg class="paste-icon" onclick="pasteFromClipboard('startDate2')" viewBox="0 0 24 24" title="لصق من الحافظة">
+            <path fill="currentColor" d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3Z"/>
+          </svg>
+        </div>
+      </div>
+      <div>
+        <label for="endDate2">تاريخ المباشرة 2</label>
+        <div class="date-input-wrapper">
+          <input id="endDate2" type="date" />
+          <svg class="paste-icon" onclick="pasteFromClipboard('endDate2')" viewBox="0 0 24 24" title="لصق من الحافظة">
+            <path fill="currentColor" d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3Z"/>
+          </svg>
+        </div>
+      </div>
+
+      <div>
+        <label for="startDate3">تاريخ انتهاء الإقامة 3</label>
+        <div class="date-input-wrapper">
+          <input id="startDate3" type="date" />
+          <svg class="paste-icon" onclick="pasteFromClipboard('startDate3')" viewBox="0 0 24 24" title="لصق من الحافظة">
+            <path fill="currentColor" d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3Z"/>
+          </svg>
+        </div>
+      </div>
+      <div>
+        <label for="endDate3">تاريخ المباشرة 3</label>
+        <div class="date-input-wrapper">
+          <input id="endDate3" type="date" />
+          <svg class="paste-icon" onclick="pasteFromClipboard('endDate3')" viewBox="0 0 24 24" title="لصق من الحافظة">
+            <path fill="currentColor" d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3Z"/>
+          </svg>
+        </div>
+      </div>
+
+      <div>
+        <label for="startDate4">تاريخ انتهاء الإقامة 4</label>
+        <div class="date-input-wrapper">
+          <input id="startDate4" type="date" />
+          <svg class="paste-icon" onclick="pasteFromClipboard('startDate4')" viewBox="0 0 24 24" title="لصق من الحافظة">
+            <path fill="currentColor" d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3Z"/>
+          </svg>
+        </div>
+      </div>
+      <div>
+        <label for="endDate4">تاريخ المباشرة 4</label>
+        <div class="date-input-wrapper">
+          <input id="endDate4" type="date" />
+          <svg class="paste-icon" onclick="pasteFromClipboard('endDate4')" viewBox="0 0 24 24" title="لصق من الحافظة">
+            <path fill="currentColor" d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3Z"/>
+          </svg>
+        </div>
+      </div>
+
+      <div>
+        <label for="startDate5">تاريخ انتهاء الإقامة 5</label>
+        <div class="date-input-wrapper">
+          <input id="startDate5" type="date" />
+          <svg class="paste-icon" onclick="pasteFromClipboard('startDate5')" viewBox="0 0 24 24" title="لصق من الحافظة">
+            <path fill="currentColor" d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3Z"/>
+          </svg>
+        </div>
+      </div>
+      <div>
+        <label for="endDate5">تاريخ المباشرة 5</label>
+        <div class="date-input-wrapper">
+          <input id="endDate5" type="date" />
+          <svg class="paste-icon" onclick="pasteFromClipboard('endDate5')" viewBox="0 0 24 24" title="لصق من الحافظة">
+            <path fill="currentColor" d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3Z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="options">
+      <label>
+        <input id="inclusive" type="checkbox" />
+        احتساب اليومين معًا (شامل)
+      </label>
+    </div>
+
+    <section aria-live="polite">
+      <div class="result" id="result1" style="display:none"></div>
+      <div class="result" id="result2" style="display:none"></div>
+      <div class="result" id="result3" style="display:none"></div>
+      <div class="result" id="result4" style="display:none"></div>
+      <div class="result" id="result5" style="display:none"></div>
+    </section>
+
+    <!-- قسم جديد: تكاليف تمديد التأشيرة -->
+    <div class="heading" style="margin-top:16px">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="3" y="4" width="18" height="17" rx="3" ry="3" fill="currentColor" opacity="0.25"></rect>
+        <rect x="3" y="8" width="18" height="1.6" fill="currentColor" opacity="0.55"></rect>
+        <circle cx="8" cy="13" r="1.4" fill="currentColor"></circle>
+        <circle cx="12" cy="13" r="1.4" fill="currentColor" opacity="0.9"></circle>
+        <circle cx="16" cy="13" r="1.4" fill="currentColor" opacity="0.9"></circle>
+        <circle cx="8" cy="17" r="1.4" fill="currentColor" opacity="0.9"></circle>
+        <circle cx="12" cy="17" r="1.4" fill="currentColor" opacity="0.9"></circle>
+        <circle cx="16" cy="17" r="1.4" fill="currentColor" opacity="0.9"></circle>
+        <rect x="7" y="2" width="2.6" height="4" rx="1.3" fill="currentColor"></rect>
+        <rect x="14.4" y="2" width="2.6" height="4" rx="1.3" fill="currentColor"></rect>
+      </svg>
+      <h2 id="visaExtTitle">تكاليف تمديد التأشيرة</h2>
+    </div>
+    <p class="help" id="visaHelpText">أدخل (تاريخ انتهاء الإجازة) و (تاريخ العودة)، تُعرض النتيجة كمجموع أيام وبصيغة سنوات/أشهر/أيام. بند التكلفة: (تكاليف تمديد التأشيرة (<span id="visaHelpRate">29.23</span> × الأيام))</p>
+
+    <div class="grid">
+      <!-- 5 صفوف لقسم التأشيرة -->
+      <div>
+        <label for="visaEnd1">تاريخ انتهاء الإجازة 1</label>
+        <div class="date-input-wrapper">
+          <input id="visaEnd1" type="date" />
+          <svg class="paste-icon" onclick="pasteFromClipboard('visaEnd1')" viewBox="0 0 24 24" title="لصق من الحافظة">
+            <path fill="currentColor" d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3Z"/>
+          </svg>
+        </div>
+      </div>
+      <div>
+        <label for="visaReturn1">تاريخ العودة 1</label>
+        <div class="date-input-wrapper">
+          <input id="visaReturn1" type="date" />
+          <svg class="paste-icon" onclick="pasteFromClipboard('visaReturn1')" viewBox="0 0 24 24" title="لصق من الحافظة">
+            <path fill="currentColor" d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3Z"/>
+          </svg>
+        </div>
+      </div>
+
+      <div>
+        <label for="visaEnd2">تاريخ انتهاء الإجازة 2</label>
+        <div class="date-input-wrapper">
+          <input id="visaEnd2" type="date" />
+          <svg class="paste-icon" onclick="pasteFromClipboard('visaEnd2')" viewBox="0 0 24 24" title="لصق من الحافظة">
+            <path fill="currentColor" d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3Z"/>
+          </svg>
+        </div>
+      </div>
+      <div>
+        <label for="visaReturn2">تاريخ العودة 2</label>
+        <div class="date-input-wrapper">
+          <input id="visaReturn2" type="date" />
+          <svg class="paste-icon" onclick="pasteFromClipboard('visaReturn2')" viewBox="0 0 24 24" title="لصق من الحافظة">
+            <path fill="currentColor" d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3Z"/>
+          </svg>
+        </div>
+      </div>
+
+      <div>
+        <label for="visaEnd3">تاريخ انتهاء الإجازة 3</label>
+        <div class="date-input-wrapper">
+          <input id="visaEnd3" type="date" />
+          <svg class="paste-icon" onclick="pasteFromClipboard('visaEnd3')" viewBox="0 0 24 24" title="لصق من الحافظة">
+            <path fill="currentColor" d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3Z"/>
+          </svg>
+        </div>
+      </div>
+      <div>
+        <label for="visaReturn3">تاريخ العودة 3</label>
+        <div class="date-input-wrapper">
+          <input id="visaReturn3" type="date" />
+          <svg class="paste-icon" onclick="pasteFromClipboard('visaReturn3')" viewBox="0 0 24 24" title="لصق من الحافظة">
+            <path fill="currentColor" d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3Z"/>
+          </svg>
+        </div>
+      </div>
+
+      <div>
+        <label for="visaEnd4">تاريخ انتهاء الإجازة 4</label>
+        <div class="date-input-wrapper">
+          <input id="visaEnd4" type="date" />
+          <svg class="paste-icon" onclick="pasteFromClipboard('visaEnd4')" viewBox="0 0 24 24" title="لصق من الحافظة">
+            <path fill="currentColor" d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3Z"/>
+          </svg>
+        </div>
+      </div>
+      <div>
+        <label for="visaReturn4">تاريخ العودة 4</label>
+        <div class="date-input-wrapper">
+          <input id="visaReturn4" type="date" />
+          <svg class="paste-icon" onclick="pasteFromClipboard('visaReturn4')" viewBox="0 0 24 24" title="لصق من الحافظة">
+            <path fill="currentColor" d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3Z"/>
+          </svg>
+        </div>
+      </div>
+
+      <div>
+        <label for="visaEnd5">تاريخ انتهاء الإجازة 5</label>
+        <div class="date-input-wrapper">
+          <input id="visaEnd5" type="date" />
+          <svg class="paste-icon" onclick="pasteFromClipboard('visaEnd5')" viewBox="0 0 24 24" title="لصق من الحافظة">
+            <path fill="currentColor" d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3Z"/>
+          </svg>
+        </div>
+      </div>
+      <div>
+        <label for="visaReturn5">تاريخ العودة 5</label>
+        <div class="date-input-wrapper">
+          <input id="visaReturn5" type="date" />
+          <svg class="paste-icon" onclick="pasteFromClipboard('visaReturn5')" viewBox="0 0 24 24" title="لصق من الحافظة">
+            <path fill="currentColor" d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3Z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="options">
+      <label>
+        <input id="inclusiveVisa" type="checkbox" />
+        احتساب اليومين معًا (شامل)
+      </label>
+    </div>
+
+    <section aria-live="polite">
+      <div class="result" id="visaOut1" style="display:none"></div>
+      <div class="result" id="visaOut2" style="display:none"></div>
+      <div class="result" id="visaOut3" style="display:none"></div>
+      <div class="result" id="visaOut4" style="display:none"></div>
+      <div class="result" id="visaOut5" style="display:none"></div>
+    </section>
+
+    <!-- عنوان وأيقونة لقسم التجديد -->
+    <div class="heading" style="margin-top:10px">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="3" y="4" width="18" height="17" rx="3" ry="3" fill="currentColor" opacity="0.25"></rect>
+        <rect x="3" y="8" width="18" height="1.6" fill="currentColor" opacity="0.55"></rect>
+        <circle cx="8" cy="13" r="1.4" fill="currentColor"></circle>
+        <circle cx="12" cy="13" r="1.4" fill="currentColor" opacity="0.9"></circle>
+        <circle cx="16" cy="13" r="1.4" fill="currentColor" opacity="0.9"></circle>
+        <circle cx="8" cy="17" r="1.4" fill="currentColor" opacity="0.9"></circle>
+        <circle cx="12" cy="17" r="1.4" fill="currentColor" opacity="0.9"></circle>
+        <circle cx="16" cy="17" r="1.4" fill="currentColor" opacity="0.9"></circle>
+        <rect x="7" y="2" width="2.6" height="4" rx="1.3" fill="currentColor"></rect>
+        <rect x="14.4" y="2" width="2.6" height="4" rx="1.3" fill="currentColor"></rect>
+      </svg>
+      <h2 id="renewTitle">حساب مدة تجديد الإقامة</h2>
+    </div>
+    <p class="help">أدخل تاريخ انتهاء الإقامة، تُعرض المدة حتى اليوم بصيغة سنوات/أشهر/أيام، ثم اختر مدة التجديد لإظهار التاريخ الناتج من اليوم بالأرقام.</p>
+
+    <div class="panel" aria-labelledby="renewTitle">
+      <div class="grid">
+        <div>
+          <label for="iqamaExpiry1">تاريخ انتهاء الإقامة 1</label>
+          <div class="date-input-wrapper">
+            <input id="iqamaExpiry1" type="date" />
+            <svg class="paste-icon" onclick="pasteFromClipboard('iqamaExpiry1')" viewBox="0 0 24 24" title="لصق من الحافظة">
+              <path fill="currentColor" d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3Z"/>
+            </svg>
+          </div>
+        </div>
+        <div><label>المدة من الانتهاء إلى اليوم</label><div id="sinceOut1" class="muted">—</div></div>
+
+        <div>
+          <label for="iqamaExpiry2">تاريخ انتهاء الإقامة 2</label>
+          <div class="date-input-wrapper">
+            <input id="iqamaExpiry2" type="date" />
+            <svg class="paste-icon" onclick="pasteFromClipboard('iqamaExpiry2')" viewBox="0 0 24 24" title="لصق من الحافظة">
+              <path fill="currentColor" d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3Z"/>
+            </svg>
+          </div>
+        </div>
+        <div><label>المدة من الانتهاء إلى اليوم</label><div id="sinceOut2" class="muted">—</div></div>
+
+        <div>
+          <label for="iqamaExpiry3">تاريخ انتهاء الإقامة 3</label>
+          <div class="date-input-wrapper">
+            <input id="iqamaExpiry3" type="date" />
+            <svg class="paste-icon" onclick="pasteFromClipboard('iqamaExpiry3')" viewBox="0 0 24 24" title="لصق من الحافظة">
+              <path fill="currentColor" d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3Z"/>
+            </svg>
+          </div>
+        </div>
+        <div><label>المدة من الانتهاء إلى اليوم</label><div id="sinceOut3" class="muted">—</div></div>
+
+        <div>
+          <label for="iqamaExpiry4">تاريخ انتهاء الإقامة 4</label>
+          <div class="date-input-wrapper">
+            <input id="iqamaExpiry4" type="date" />
+            <svg class="paste-icon" onclick="pasteFromClipboard('iqamaExpiry4')" viewBox="0 0 24 24" title="لصق من الحافظة">
+              <path fill="currentColor" d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3Z"/>
+            </svg>
+          </div>
+        </div>
+        <div><label>المدة من الانتهاء إلى اليوم</label><div id="sinceOut4" class="muted">—</div></div>
+
+        <div>
+          <label for="iqamaExpiry5">تاريخ انتهاء الإقامة 5</label>
+          <div class="date-input-wrapper">
+            <input id="iqamaExpiry5" type="date" />
+            <svg class="paste-icon" onclick="pasteFromClipboard('iqamaExpiry5')" viewBox="0 0 24 24" title="لصق من الحافظة">
+              <path fill="currentColor" d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3Z"/>
+            </svg>
+          </div>
+        </div>
+        <div><label>المدة من الانتهاء إلى اليوم</label><div id="sinceOut5" class="muted">—</div></div>
+      </div>
+
+      <div style="height:10px"></div>
+
+      <div>
+        <label>اختر مدة التجديد (أشهر)</label>
+        <div class="seg" role="radiogroup" aria-label="مدة التجديد بالأشهر">
+          <input type="radio" name="renew" id="m3" value="3" checked>
+          <label for="m3">3 أشهر</label>
+
+          <input type="radio" name="renew" id="m6" value="6">
+          <label for="m6">6 أشهر</label>
+
+          <input type="radio" name="renew" id="m9" value="9">
+          <label for="m9">9 أشهر</label>
+
+          <input type="radio" name="renew" id="m12" value="12">
+          <label for="m12">12 شهرًا</label>
+        </div>
+      </div>
+
+      <div style="margin-top:14px">
+        <div class="result" id="renewOut1" style="display:none"></div>
+        <div class="result" id="renewOut2" style="display:none"></div>
+        <div class="result" id="renewOut3" style="display:none"></div>
+        <div class="result" id="renewOut4" style="display:none"></div>
+        <div class="result" id="renewOut5" style="display:none"></div>
+      </div>
+
+      <div class="note" style="margin-top:12px">
+        <div class="dot" aria-hidden="true"></div>
+        <div>الحساب على مستوى التاريخ فقط مع تثبيت الزمن عند منتصف الليل (UTC) لضمان ثبات النتائج.</div>
+      </div>
+    </div>
+
+    <div class="footer">ملاحظة: يعتمد الحساب على التاريخ فقط دون الوقت لتجنّب فروق المناطق الزمنية والتوقيت الصيفي.</div>
+  
+</div>
+
+    <!-- === New HR Tools === -->
+
+    <!-- 1. Gov Fees Tab -->
+    <div id="content-gov" class="tab-content">
+      <div class="heading" style="margin-bottom:20px;">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+        <h2 style="margin:0; font-size:1.35rem;">حاسبة الرسوم الحكومية</h2>
+      </div>
+
+      <div class="grid">
+        <div class="calc-box" style="margin-top:0;">
+          <h3 style="margin-top:0; color:var(--acc); font-size:1.1rem;">رخصة العمل والمقابل المالي</h3>
+          <div class="input-group">
+            <label>مدة التجديد (بالأشهر)</label>
+            <input type="number" id="wpMonths" min="1" max="60" value="12">
+          </div>
+          <button class="btn-primary" onclick="calcWorkPermit()">احسب التكلفة</button>
+          <div id="wpResult" style="display:none; margin-top:16px;">
+            <div class="result-big" id="wpTotal">0 ر.س</div>
+            <div class="result-sub" id="wpDetails"></div>
+          </div>
+        </div>
+
+        <div class="calc-box" style="margin-top:0;">
+          <h3 style="margin-top:0; color:var(--acc); font-size:1.1rem;">المقابل المالي للمرافقين</h3>
+          <div class="grid" style="grid-template-columns: 1fr 1fr; gap:10px;">
+            <div class="input-group">
+              <label>عدد الأفراد</label>
+              <input type="number" id="depCount" min="1" max="20" value="1">
+            </div>
+            <div class="input-group">
+              <label>المدة (أشهر)</label>
+              <input type="number" id="depMonths" min="1" max="60" value="12">
+            </div>
+          </div>
+          <button class="btn-primary" onclick="calcDependents()">احسب التكلفة</button>
+          <div id="depResult" style="display:none; margin-top:16px;">
+            <div class="result-big" id="depTotal">0 ر.س</div>
+            <div class="result-sub" id="depDetails"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="calc-box" style="margin-top:0;">
+        <h3 style="margin-top:0; color:var(--acc); font-size:1.1rem;">رسوم نقل الكفالة</h3>
+        <div class="input-group">
+          <label>عدد مرات نقل الكفالة السابقة للموظف</label>
+          <select id="transferCount" onchange="calcTransfer()">
+            <option value="0">المرة الأولى (لم ينقل مسبقاً)</option>
+            <option value="1">المرة الثانية (تم النقل مرة واحدة سابقاً)</option>
+            <option value="2">المرة الثالثة فأكثر (تم النقل مرتين أو أكثر)</option>
+          </select>
+        </div>
+        <div id="transResult" style="display:block; margin-top:16px;">
+          <div class="result-big" id="transTotal">2,000 ر.س</div>
+          <div class="result-sub">حسب النظام السعودي المعتمد</div>
+        </div>
+      </div>
+    </div>
+
+    
+    
+    <!-- 2. EOS Tab (Exact HRSD Design) -->
+    <div id="content-eos" class="tab-content">
+      <div style="margin-bottom:30px; text-align:right;">
+        <h2 style="margin:0; font-size:1.8rem; font-weight:800; color:var(--txt);">حاسبة مكافأة نهاية الخدمة</h2>
+        <p style="color:var(--muted); margin-top:8px;">أدخل التفاصيل الخاصة بمدة الخدمة لاحتساب قيمة مكافأة نهاية الخدمة</p>
+      </div>
+
+      <div class="hrsd-grid">
+        <!-- Right Column -->
+        <div>
+          <div class="hrsd-group">
+            <label>الراتب الأساسي <span>*</span></label>
+            <div class="hrsd-input-wrapper">
+              <input type="number" id="eosSalary" placeholder="الراتب الأساسي + البدلات" oninput="checkEosFields()">
+            </div>
+          </div>
+
+          <div class="hrsd-group">
+            <label>سبب انتهاء العلاقة العمالية <span>*</span></label>
+            <div class="hrsd-input-wrapper">
+              <select id="eosReason" onchange="checkEosFields()">
+                <option value="" disabled selected>حدد سبب الانتهاء</option>
+                <option value="end_term">انتهاء مدة العقد</option>
+                <option value="cancel_employer_invalid">فسخ العقد من قبل صاحب العمل لسبب غير مشروع</option>
+                <option value="article_80">فسخ العقد بموجب المادة (80)</option>
+                <option value="force_majeure">انتهاء العقد بسبب القوة القاهرة</option>
+                <option value="woman_birth">إنهاء المرأة العاملة العقد خلال ثلاثة أشهر من الوضع</option>
+                <option value="woman_marriage">إنهاء المرأة العاملة العقد خلال ستة أشهر من عقد القران</option>
+                <option value="article_81">فسخ العقد بموجب المادة (81)</option>
+                <option value="resign">الاستقالة</option>
+                <option value="agree_end">الاتفاق على انهاءه</option>
+                <option value="worker_disability">عجز العامل</option>
+                <option value="employer_death">وفاة صاحب العمل</option>
+                <option value="worker_death">وفاة العامل</option>
+                <option value="new_owner">انتقال المنشآت الفردية الى مالك جديد</option>
+                <option value="retirement">بلوغ سن التقاعد</option>
+                <option value="article_75">اشعار انهاء خدمات وفق المادة (75)</option>
+                <option value="probation">فسخ خلال فترة التجربة</option>
+              </select>
+              <svg class="hrsd-select-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+          </div>
+
+          <div class="hrsd-group">
+            <label>عدد اشهر الخدمة</label>
+            <div class="hrsd-input-wrapper">
+              <input type="number" id="eosMonths" min="0" max="11" value="0">
+            </div>
+          </div>
+        </div>
+
+        <!-- Left Column -->
+        <div>
+          <div class="hrsd-group">
+            <label>نوع العقد <span>*</span></label>
+            <div class="hrsd-input-wrapper">
+              <select id="eosContract" onchange="checkEosFields()">
+                <option value="unlimited" selected>غير محدد المدة</option>
+                <option value="limited">محدد المدة</option>
+              </select>
+              <svg class="hrsd-select-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+          </div>
+
+          <div class="hrsd-group">
+            <label>عدد سنوات الخدمة <span>*</span></label>
+            <div class="hrsd-input-wrapper">
+              <input type="number" id="eosYears" min="0" placeholder="عدد سنوات الخدمة" oninput="checkEosFields()">
+            </div>
+          </div>
+
+          <div class="hrsd-group">
+            <label>عدد ايام الخدمة</label>
+            <div class="hrsd-input-wrapper">
+              <input type="number" id="eosDays" min="0" max="30" value="0">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hrsd-actions">
+        <button class="hrsd-btn hrsd-btn-secondary" onclick="clearEOS()">تفريغ الحقول</button>
+        <button id="eosCalcBtn" class="hrsd-btn hrsd-btn-primary" onclick="calcEOS()">احسب المكافأة</button>
+      </div>
+
+      <div id="eosResult" class="hrsd-result-box">
+        <button onclick="printEOS()" title="طباعة النتيجة" style="position: absolute; left: 16px; top: 16px; background:var(--acc); border:none; color:#000; cursor:pointer; padding:6px; border-radius:8px; transition:all 0.2s; display:flex; align-items:center; gap:6px; font-family:inherit; font-weight:bold; font-size:13px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+          طباعة
+        </button>
+        <div class="hrsd-result-title">توقع أن تتلقى</div>
+        <div class="hrsd-result-value"><span id="eosTotal">0</span> ريال سعودي</div>
+        <div id="eosDetails" style="margin-top:8px; color:var(--muted); font-size:0.9rem;"></div>
+      </div>
+
+      <div class="hrsd-disclaimer">
+        يرجى العلم بأن الحاسبة مطابقة لنتائج حاسبة وزارة الموارد البشرية والتنمية الاجتماعية.
+      </div>
+    </div>
+
+    <!-- 3. Converter Tab -->
+    
+    <!-- 4. Date Converter Tab -->
+    <div id="content-converter" class="tab-content">
+      <div class="heading" style="margin-bottom:20px; justify-content:flex-start;">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+        <h2 style="font-size:1.4rem; color:var(--txt); margin:0; margin-right:10px;">محول التواريخ (أم القرى)</h2>
+      </div>
+
+      <div class="hrsd-grid">
+        <!-- Gregorian to Hijri -->
+        <div class="calc-box" style="margin-top:0;">
+          <h3 style="margin-top:0; color:var(--acc); font-size:1.1rem; text-align:center;">ميلادي إلى هجري</h3>
+          <div class="input-group">
+            <label style="display:block; text-align:right; margin-bottom:8px; color:var(--txt); font-weight:bold;">اختر التاريخ الميلادي</label>
+            <div class="date-input-wrapper">
+              <input type="date" id="convGreg" onchange="convertDate('greg')" style="width:100%; padding:12px; border-radius:8px; border:1px solid var(--border); background:var(--bg2); color:var(--txt); font-family:inherit;">
+            </div>
+          </div>
+          <div class="result-box" style="text-align:center; padding:20px; border:1px solid var(--border); border-radius:12px; background:rgba(0,0,0,0.1); margin-top:20px; min-height:100px; display:flex; flex-direction:column; justify-content:center;">
+            <div id="resHijriNum" style="font-size:1.8rem; font-weight:800; color:var(--txt); direction:ltr; letter-spacing:2px;">-- / -- / ----</div>
+            <div id="resHijriText" style="font-size:1.1rem; color:var(--muted); margin-top:8px;">-</div>
+          </div>
+        </div>
+
+        <!-- Hijri to Gregorian -->
+        <div class="calc-box" style="margin-top:0;">
+          <h3 style="margin-top:0; color:var(--acc); font-size:1.1rem; text-align:center;">هجري إلى ميلادي</h3>
+          <div class="input-group">
+            <label style="display:block; text-align:right; margin-bottom:8px; color:var(--txt); font-weight:bold;">أدخل التاريخ الهجري</label>
+            <div class="date-input-wrapper" style="display:flex; align-items:center; background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:5px; width:100%; gap:5px;">
+              <select id="hijriDay" onchange="convertDate('hijri')" style="flex:1; background:var(--bg1); border:1px solid var(--border); border-radius:5px; color:var(--txt); outline:none; font-family:inherit; cursor:pointer; font-size:0.9rem; padding:8px 5px; text-align:center;">
+                <option value="" disabled selected>اليوم</option>
+              </select>
+              <select id="hijriMonth" onchange="convertDate('hijri')" style="flex:1.5; background:var(--bg1); border:1px solid var(--border); border-radius:5px; color:var(--txt); outline:none; font-family:inherit; cursor:pointer; font-size:0.9rem; padding:8px 5px; text-align:center;">
+                <option value="" disabled selected>الشهر</option>
+                <option value="1">محرم</option>
+                <option value="2">صفر</option>
+                <option value="3">ربيع الأول</option>
+                <option value="4">ربيع الآخر</option>
+                <option value="5">جمادى الأولى</option>
+                <option value="6">جمادى الآخرة</option>
+                <option value="7">رجب</option>
+                <option value="8">شعبان</option>
+                <option value="9">رمضان</option>
+                <option value="10">شوال</option>
+                <option value="11">ذو القعدة</option>
+                <option value="12">ذو الحجة</option>
+              </select>
+              <input type="number" id="hijriYear" placeholder="السنة" oninput="convertDate('hijri')" min="1300" max="1500" style="flex:1; background:var(--bg1); border:1px solid var(--border); border-radius:5px; color:var(--txt); outline:none; font-family:inherit; font-size:0.9rem; padding:8px 5px; text-align:center;">
+            </div>
+          </div>
+          <div class="result-box" style="text-align:center; padding:20px; border:1px solid var(--border); border-radius:12px; background:rgba(0,0,0,0.1); margin-top:20px; min-height:100px; display:flex; flex-direction:column; justify-content:center;">
+            <div id="resGregNum" style="font-size:1.8rem; font-weight:800; color:var(--txt); direction:ltr; letter-spacing:2px;">-- / -- / ----</div>
+            <div id="resGregText" style="font-size:1.1rem; color:var(--muted); margin-top:8px;">-</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+</main>
+
+  
+  <!-- Settings Modal -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">إعدادات الرسوم</h2>
+        <button class="close-btn" onclick="closeSettings()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+      </div>
+      <div class="setting-group">
+        <label for="iqamaCostInput">تكلفة الإقامة اليومية (ريال)</label>
+        <input type="number" id="iqamaCostInput" step="0.01" class="date-input">
+      </div>
+      <div class="setting-group">
+        <label for="visaCostInput">تكلفة التأشيرة اليومية (ريال)</label>
+        <input type="number" id="visaCostInput" step="0.01" class="date-input">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeSettings()">إلغاء</button>
+        <button class="btn-save" onclick="saveSettings()">حفظ وتحديث</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // تطبيع التاريخ لقبول: DD-MM-YYYY أو DD/MM/YYYY أو YYYY-MM-DD أو YYYY/MM-DD
+    function normalizeDate(inputValue) {
+      if (!inputValue) return "";
+      const s = inputValue.trim();
+
+      // DMY: 25-09-2025 أو 25/09/2025 أو 25.09.2025
+      const dmy = s.match(/^(\d{2})[-\/.](\d{2})[-\/.](\d{4})$/);
+      if (dmy) return `${dmy[3]}-${dmy[2]}-${dmy[1]}`;
+
+      // YMD: 2025-09-25 أو 2025/09-25 أو 2025/09/25
+      const ymd = s.match(/^(\d{4})[-\/.](\d{2})[-\/.](\d{2})$/);
+      if (ymd) return `${ymd[1]}-${ymd[2]}-${ymd[3]}`;
+
+      return s;
+    }
+
+    // لصق من الحافظة مع معالجة محسنة للأذونات وتقرير حالة العملية
+    async function pasteFromClipboard(inputId) {
+      try {
+        if (!navigator.clipboard) {
+          alert('قراءة الحافظة غير مدعومة في هذا المتصفح. استخدم Ctrl+V للصق يدوياً');
+          return;
+        }
+
+        let text = '';
+        try {
+          text = await navigator.clipboard.readText();
+        } catch (readErr) {
+          console.warn('فشل في قراءة الحافظة:', readErr);
+          if (document.execCommand) {
+            const tempInput = document.createElement('input');
+            tempInput.style.position = 'absolute';
+            tempInput.style.left = '-9999px';
+            document.body.appendChild(tempInput);
+            tempInput.focus();
+            if (document.execCommand('paste')) {
+              text = tempInput.value;
+            }
+            document.body.removeChild(tempInput);
+          }
+
+          if (!text) {
+            alert('لا يمكن قراءة الحافظة. يرجى استخدام Ctrl+V للصق يدوياً');
+            return;
+          }
+        }
+
+        const normalized = normalizeDate(text);
+        const input = document.getElementById(inputId);
+
+        if (input) {
+          const oldValue = input.value;
+          input.value = normalized;
+
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+
+          if (input.value !== oldValue && normalized) {
+            input.style.borderColor = '#22d3ee';
+            input.style.boxShadow = '0 0 0 2px rgba(34,211,238,0.3)';
+            setTimeout(() => {
+              input.style.borderColor = '';
+              input.style.boxShadow = '';
+            }, 1000);
+
+            console.log(`تم لصق التاريخ بنجاح: ${normalized} في ${inputId}`);
+          } else if (!normalized) {
+            alert('النص المنسوخ ليس بصيغة تاريخ صحيحة. الصيغ المدعومة: DD-MM-YYYY أو DD/MM/YYYY أو YYYY-MM-DD');
+          }
+        }
+
+      } catch (err) {
+        console.error('خطأ في عملية اللصق:', err);
+        alert('حدث خطأ في اللصق. يرجى المحاولة مرة أخرى أو استخدام Ctrl+V');
+      }
+    }
+
+    // تمكين التطبيع على input و paste
+    function enableDateNormalization(elementId) {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+
+      el.addEventListener('input', (e) => {
+        const v = normalizeDate(e.target.value);
+        if (e.target.value !== v) e.target.value = v;
+      });
+
+      el.addEventListener('paste', () => {
+        setTimeout(() => {
+          const v = normalizeDate(el.value);
+          if (el.value !== v) el.value = v;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+        }, 0);
+      });
+    }
+
+    // عناصر التحكم العامة
+    const inclEl = document.getElementById('inclusive');
+    const inclVisaEl = document.getElementById('inclusiveVisa');
+
+    // أدوات عامة
+    function parseISOtoYMD(iso){
+      const [y,m,d] = iso.split('-').map(Number);
+      return { y, m, d };
+    }
+    function makeUTC(y,m1,d){ return new Date(Date.UTC(y, m1-1, d)); }
+    function daysInMonthUTC(y, m1){ return new Date(Date.UTC(y, m1, 0)).getUTCDate(); }
+    function addMonthsClampUTC(y, m1, d, add){
+      let total = (y * 12) + (m1 - 1) + add;
+      let ny = Math.floor(total / 12);
+      let nm0 = total % 12; if (nm0 < 0){ nm0 += 12; ny -= 1; }
+      const nm1 = nm0 + 1;
+      const maxDay = daysInMonthUTC(ny, nm1);
+      const nd = Math.min(d, maxDay);
+      return makeUTC(ny, nm1, nd);
+    }
+    function todayLocalAsUTCDate(){
+      const now = new Date();
+      return makeUTC(now.getFullYear(), now.getMonth()+1, now.getDate());
+    }
+    function formatNumberAr(n) {
+      try { return new Intl.NumberFormat('ar', { numberingSystem: 'arab' }).format(n); }
+      catch { return String(n); }
+    }
+    function formatAmountNumber(n){
+      try {
+        return new Intl.NumberFormat('ar', { numberingSystem: 'arab', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+      } catch {
+        const rounded = Math.round(n * 100) / 100;
+        return String(rounded.toFixed(2));
+      }
+    }
+    function formatArDMYNumeric(date){
+      try {
+        return new Intl.DateTimeFormat('ar', { day:'2-digit', month:'2-digit', year:'numeric', numberingSystem:'arab' }).format(date);
+      } catch {
+        const y = date.getUTCFullYear();
+        const m = String(date.getUTCMonth()+1).padStart(2,'0');
+        const d = String(date.getUTCDate()).padStart(2,'0');
+        return `${d}/${m}/${y}`;
+      }
+    }
+
+    function diffYMD_utc(startUTC, endUTC){
+      let sY = startUTC.getUTCFullYear(), sM = startUTC.getUTCMonth()+1, sD = startUTC.getUTCDate();
+      let eY = endUTC.getUTCFullYear(),   eM = endUTC.getUTCMonth()+1,   eD = endUTC.getUTCDate();
+      let sign = 1;
+      if (endUTC.getTime() < startUTC.getTime()){
+        sign = -1;
+        [sY, eY] = [eY, sY];
+        [sM, eM] = [eM, sM];
+        [sD, eD] = [eD, sD];
+      }
+      let years = eY - sY;
+      if (eM < sM || (eM === sM && eD < sD)) years--;
+      const afterYears = addMonthsClampUTC(sY, sM, sD, years * 12);
+      const aY = afterYears.getUTCFullYear(), aM = afterYears.getUTCMonth()+1, aD = afterYears.getUTCDate();
+      let months = eM - aM;
+      if (eD < aD) months--;
+      if (months < 0) months += 12;
+      const afterMonths = addMonthsClampUTC(aY, aM, aD, months);
+      const MS_PER_DAY = 24 * 60 * 60 * 1000;
+      const days = Math.floor((makeUTC(eY, eM, eD).getTime() - afterMonths.getTime()) / MS_PER_DAY);
+      return { sign, years, months, days };
+    }
+
+    function daysBetweenSigned(a, b, inclusive){
+      const A = parseISOtoYMD(a), B = parseISOtoYMD(b);
+      const t1 = Date.UTC(A.y, A.m - 1, A.d);
+      const t2 = Date.UTC(B.y, B.m - 1, B.d);
+      const MS_PER_DAY = 24 * 60 * 60 * 1000;
+      let s = Math.floor((t2 - t1) / MS_PER_DAY);
+      if (inclusive) s = s >= 0 ? s + 1 : s - 1;
+      return s;
+    }
+
+    function copyToClipboard(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text);
+      } else {
+        alert("لا يمكن نسخ النص في هذا المتصفح");
+      }
+    }
+
+    // دالة مُجمّعة لعرض صف
+    function renderBasicRow(i, a, b, resultDiv, inclusive, rate, labelText){
+      if (!a || !b) { resultDiv.style.display = 'none'; return; }
+      resultDiv.style.display = 'block';
+
+      const signed = daysBetweenSigned(a, b, inclusive);
+      const signChar = signed < 0 ? '-' : '';
+      const absDays = Math.abs(signed);
+
+      const A = parseISOtoYMD(a), B = parseISOtoYMD(b);
+      const dA = makeUTC(A.y, A.m, A.d), dB = makeUTC(B.y, B.m, B.d);
+      const cal = diffYMD_utc(dA, dB);
+      const signCal = cal.sign < 0 ? '-' : '';
+
+      const feeSigned = signed * rate;
+      const feeNum = formatAmountNumber(Math.abs(feeSigned));
+
+      const copyText =
+        `الفرق: ${signChar}${absDays} يوم | التقويمي: ${signCal}${cal.years} سنة ${cal.months} شهر ${cal.days} يوم | ${labelText} ${signChar}${feeNum} ر.س.`;
+
+      resultDiv.innerHTML = `
+        <div><span class="label">النتيجة ${i} (إجمالي الأيام):</span>
+          ${signChar}<span class="val"><strong>${formatNumberAr(absDays)}</strong></span>
+          <span class="label">يومًا</span></div>
+        <div class="muted">الفرق التقويمي:
+          ${signCal}${formatNumberAr(cal.years)} سنة، ${formatNumberAr(cal.months)} شهر، ${formatNumberAr(cal.days)} يوم</div>
+        <div class="muted"><span class="label">${labelText}</span>
+          ${signChar}<span class="val"><strong>${feeNum}</strong></span> <span class="label">ر.س.</span></div>
+        <button class="copy-btn" onclick="copyToClipboard('${copyText}')">نسخ</button>
+      `;
+
+      if (signed < 0) resultDiv.classList.add('error'); else resultDiv.classList.remove('error');
+    }
+
+    // تحديث القسم الأول (رسوم التحمل 1.84)
+    function updateBasic(){
+      const inclusive = inclEl.checked;
+      const rate = parseFloat(localStorage.getItem('app-iqama-cost')) || 1.84;
+      const displayRate = Number(rate).toFixed(2);
+
+      const helpRateEl = document.getElementById('basicHelpRate');
+      if(helpRateEl) helpRateEl.innerText = displayRate;
+
+      for (let i = 1; i <= 5; i++) {
+        const a = document.getElementById(`startDate${i}`).value;
+        const b = document.getElementById(`endDate${i}`).value;
+        const resultDiv = document.getElementById(`result${i}`);
+        const displayRate = Number(rate).toFixed(2);
+        const labelText = `رسوم التحمل (${displayRate} × الأيام):`;
+        renderBasicRow(i, a, b, resultDiv, inclusive, rate, labelText);
+      }
+    }
+
+    // قسم جديد: تكاليف تمديد التأشيرة (29.23)
+    function updateVisa(){
+      const inclusive = inclVisaEl.checked;
+      const rate = parseFloat(localStorage.getItem('app-visa-cost')) || 29.23;
+      const displayRate = Number(rate).toFixed(2);
+
+      const helpRateEl = document.getElementById('visaHelpRate');
+      if(helpRateEl) helpRateEl.innerText = displayRate;
+
+      for (let i = 1; i <= 5; i++) {
+        const a = document.getElementById(`visaEnd${i}`).value;
+        const b = document.getElementById(`visaReturn${i}`).value;
+        const resultDiv = document.getElementById(`visaOut${i}`);
+        const displayRate = Number(rate).toFixed(2);
+        const labelText = `تكاليف تمديد التأشيرة (${displayRate} × الأيام):`;
+        renderBasicRow(i, a, b, resultDiv, inclusive, rate, labelText);
+      }
+    }
+
+    // تحديث قسم الإقامة (5 صفوف)
+    function updateResidence(){
+      const monthsSel = Number(document.querySelector('input[name="renew"]:checked')?.value || 3);
+      const today = todayLocalAsUTCDate();
+
+      for (let i = 1; i <= 5; i++) {
+        const iso = document.getElementById(`iqamaExpiry${i}`).value;
+        const sinceEl = document.getElementById(`sinceOut${i}`);
+        const renewDiv = document.getElementById(`renewOut${i}`);
+
+        if (!iso) { sinceEl.textContent = '—'; renewDiv.style.display = 'none'; continue; }
+
+        const exp = (() => { const p = parseISOtoYMD(iso); return makeUTC(p.y, p.m, p.d); })();
+        const diff = diffYMD_utc(exp, today);
+        const dir = diff.sign >= 0 ? 'منذ' : 'متبقٍ';
+        const totalMonths = (diff.years * 12) + diff.months;
+        let extHTML = '';
+        if (diff.years === 0 && diff.months === 0 && diff.days === 0) {
+          extHTML = `<span class="side-months-note today" style="margin-right: 8px; font-size: 0.85em; padding: 3px 8px; vertical-align: middle;">⚠️ تنتهي اليوم</span>`;
+        } else if (diff.sign > 0) {
+          extHTML = `<span class="side-months-note" style="margin-right: 8px; font-size: 0.85em; padding: 3px 8px; vertical-align: middle;">⏰ منتهية منذ ${formatNumberAr(totalMonths)} شهر و ${formatNumberAr(diff.days)} يوم</span>`;
+        } else if (diff.sign < 0) {
+          extHTML = `<span class="side-months-note valid" style="margin-right: 8px; font-size: 0.85em; padding: 3px 8px; vertical-align: middle;">✓ متبقي ${formatNumberAr(totalMonths)} شهر و ${formatNumberAr(diff.days)} يوم</span>`;
+        }
+        sinceEl.innerHTML = `<span style="vertical-align: middle;">${dir} ${formatNumberAr(diff.years)} سنة، ${formatNumberAr(diff.months)} شهر، ${formatNumberAr(diff.days)} يوم</span> ${extHTML}`;
+
+        const y0 = today.getUTCFullYear(), m0 = today.getUTCMonth()+1, d0 = today.getUTCDate();
+        const target = addMonthsClampUTC(y0, m0, d0, monthsSel);
+        const targetText = formatArDMYNumeric(target);
+
+        renewDiv.style.display = 'block';
+        renewDiv.innerHTML = `
+          <div>التاريخ ${i} بعد المدة المختارة بالإضافة إلى اليوم: ${targetText}</div>
+          <button class="copy-btn" onclick="copyToClipboard('${targetText}')">نسخ</button>
+        `;
+      }
+    }
+
+    // تمكين التطبيع على كل الحقول مع ربط الأحداث
+    for (let i = 1; i <= 5; i++) {
+      // الأساسي
+      enableDateNormalization(`startDate${i}`);
+      enableDateNormalization(`endDate${i}`);
+      document.getElementById(`startDate${i}`).addEventListener('input', updateBasic);
+      document.getElementById(`endDate${i}`).addEventListener('input', updateBasic);
+
+      // التأشيرة
+      enableDateNormalization(`visaEnd${i}`);
+      enableDateNormalization(`visaReturn${i}`);
+      document.getElementById(`visaEnd${i}`).addEventListener('input', updateVisa);
+      document.getElementById(`visaReturn${i}`).addEventListener('input', updateVisa);
+
+      // الإقامة
+      enableDateNormalization(`iqamaExpiry${i}`);
+      document.getElementById(`iqamaExpiry${i}`).addEventListener('input', updateResidence);
+    }
+    inclEl.addEventListener('change', updateBasic);
+    inclVisaEl.addEventListener('change', updateVisa);
+    document.querySelectorAll('input[name="renew"]').forEach(r => r.addEventListener('change', updateResidence));
+
+    // تهيئة
+    updateBasic();
+    updateVisa();
+    updateResidence();
+  </script>
+
+
+<script>
+(function(){
+  // --- Toast ---
+  window.showToast = function(msg, type){
+    const host = document.getElementById('toastHost');
+    const stack = document.getElementById('toastStack');
+    if(!host || !stack){ alert(msg); return; }
+    host.style.display = 'flex';
+    const t = document.createElement('div');
+    t.className = `toast ${type || 'info'}`;
+    const ico = type === 'success' ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>' : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 9v4M12 17h.01M10.29 3.86l-7.4 12.8A2 2 0 004.6 20h14.8a2 2 0 001.71-3.34l-7.4-12.8a2 2 0 00-3.42 0z"/></svg>';
+    t.innerHTML = `<div class="toast-ico">${ico}</div><div style="flex:1"><p class="t-title">${type==='success'?'تم':'تنبيه'}</p><p class="t-msg">${msg}</p></div><button class="t-close">✕</button>`;
+    t.querySelector('.t-close').onclick = () => { t.style.animation='tOut .15s forwards'; setTimeout(()=>t.remove(), 160); };
+    stack.prepend(t);
+    setTimeout(() => { if(t.parentNode) t.querySelector('.t-close').click(); }, 3500);
+  };
+
+  // --- Handlers ---
+  window.openSettings = () => {
+    document.getElementById('iqamaCostInput').value = localStorage.getItem('app-iqama-cost') || 1.84;
+    document.getElementById('visaCostInput').value = localStorage.getItem('app-visa-cost') || 29.23;
+    document.getElementById('settingsModal').classList.add('active');
+  };
+  window.closeSettings = () => document.getElementById('settingsModal').classList.remove('active');
+  window.saveSettings = () => {
+    localStorage.setItem('app-iqama-cost', document.getElementById('iqamaCostInput').value || 1.84);
+    localStorage.setItem('app-visa-cost', document.getElementById('visaCostInput').value || 29.23);
+    closeSettings();
+    document.querySelectorAll('input[type="date"]').forEach(i => i.dispatchEvent(new Event('change', {bubbles:true})));
+    showToast('تم تحديث التكاليف بنجاح', 'success');
+  };
+  window.clearAllFields = () => {
+    document.querySelectorAll('input[type="date"]').forEach(i => { i.value=''; i.dispatchEvent(new Event('change', {bubbles:true})); });
+    ['result','visaOut','renewOut'].forEach(id => { for(let i=1;i<=5;i++){ let el=document.getElementById(id+i); if(el) el.style.display='none'; } });
+    showToast('تم تفريغ جميع الحقول', 'success');
+  };
+  window.convertArabicToNumber = (s) => {
+    if(!s) return 0;
+    const ar=['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'], en=['0','1','2','3','4','5','6','7','8','9'];
+    let str = String(s);
+    ar.forEach((a,i) => str = str.replace(new RegExp(a,'g'), en[i]));
+    return parseFloat(str.replace(/[,،]/g,'').replace(/٫/g,'.').replace(/[^0-9.-]/g,'')) || 0;
+  };
+
+  // --- Export ---
+  
+
+  
+  // Enhanced renewal calculation with months
+  
+  // --- Theme ---
+  function applyTheme(t){
+    document.documentElement.setAttribute('data-theme', t);
+    const s=document.getElementById('sun-icon'), m=document.getElementById('moon-icon');
+    if(s&&m){ s.style.display=t==='dark'?'block':'none'; m.style.display=t==='dark'?'none':'block'; }
+  }
+  const init = () => {
+    
+  document.querySelectorAll('[id^="renewOut"]').forEach(el => {
+    el.style.display = 'none';
+    el.innerHTML = '';
+  });
+
+    let t = localStorage.getItem('app-theme') || 'dark';
+    applyTheme(t);
+    const btn = document.getElementById('theme-toggle');
+    if(btn) btn.onclick = () => { t = t==='dark'?'light':'dark'; localStorage.setItem('app-theme', t); applyTheme(t); };
+
+    };
+  
+  // Wire renewal date inputs
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+
+  
+
+// --- Inner Tabs Logic ---
+window.switchInnerTab = function(contentId, btn) {
+  // Hide all contents
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  // Remove active from all tabs
+  document.querySelectorAll('.top-tab').forEach(el => el.classList.remove('active'));
+
+  // Show target
+  document.getElementById(contentId).classList.add('active');
+  btn.classList.add('active');
+
+  // Update Title dynamically
+  const titleEl = document.getElementById('title');
+  if(titleEl) {
+    if(contentId === 'content-original') titleEl.innerText = 'الإقامات والتأشيرات';
+    else if(contentId === 'content-gov') titleEl.innerText = 'الرسوم الحكومية';
+    else if(contentId === 'content-eos') titleEl.innerText = 'مكافأة نهاية الخدمة';
+    else if(contentId === 'content-converter') titleEl.innerText = 'تحويل التاريخ';
+  }
+};
+
+// --- Gov Fees Logic ---
+window.calcWorkPermit = function() {
+  const months = parseInt(document.getElementById('wpMonths').value) || 0;
+  if(months <= 0) return;
+  const years = Math.ceil(months / 12);
+  const permitFee = years * 100;
+  const levyFee = months * 800;
+  const total = permitFee + levyFee;
+
+  document.getElementById('wpTotal').innerText = total.toLocaleString('en-US') + ' ر.س';
+  document.getElementById('wpDetails').innerText = `المقابل المالي: ${levyFee.toLocaleString()} | رخصة العمل: ${permitFee.toLocaleString()}`;
+  document.getElementById('wpResult').style.display = 'block';
+};
+
+window.calcDependents = function() {
+  const count = parseInt(document.getElementById('depCount').value) || 0;
+  const months = parseInt(document.getElementById('depMonths').value) || 0;
+  if(count <= 0 || months <= 0) return;
+
+  const total = count * months * 400;
+
+  document.getElementById('depTotal').innerText = total.toLocaleString('en-US') + ' ر.س';
+  document.getElementById('depDetails').innerText = `بواقع 400 ريال شهرياً لكل مرافق`;
+  document.getElementById('depResult').style.display = 'block';
+};
+
+window.calcTransfer = function() {
+  const count = parseInt(document.getElementById('transferCount').value);
+  let total = 2000;
+  if (count === 1) total = 4000;
+  if (count === 2) total = 6000;
+
+  document.getElementById('transTotal').innerText = total.toLocaleString('en-US') + ' ر.س';
+  document.getElementById('transResult').style.display = 'block';
+};
+
+
+// --- Theme Handling Fixes ---
+window.setTheme = function(t) {
+  localStorage.setItem('app-theme', t);
+  if (typeof applyTheme === 'function') {
+    applyTheme(t);
+  } else {
+    document.documentElement.setAttribute('data-theme', t);
+  }
+  const menu = document.getElementById('theme-dropdown');
+  if(menu) menu.classList.remove('show');
+};
+
+window.toggleThemeMenu = function(event) {
+  event.stopPropagation();
+  const menu = document.getElementById('theme-dropdown');
+  if (menu) menu.classList.toggle('show');
+};
+
+document.addEventListener('click', function(e) {
+  const menu = document.getElementById('theme-dropdown');
+  const wrapper = document.querySelector('.theme-dropdown-wrapper');
+  if (menu && wrapper && !wrapper.contains(e.target)) {
+    menu.classList.remove('show');
+  }
+});
+
+// --- EOS Logic ---
+window.checkEosFields = function() {
+  const salary = document.getElementById('eosSalary').value;
+  const reason = document.getElementById('eosReason').value;
+  const years = document.getElementById('eosYears').value;
+  const btn = document.getElementById('eosCalcBtn');
+
+  if (salary && reason && years) {
+    btn.classList.add('active');
+  } else {
+    btn.classList.remove('active');
+  }
+};
+
+window.clearEOS = function() {
+  document.getElementById('eosSalary').value = '';
+  document.getElementById('eosReason').value = '';
+  document.getElementById('eosContract').value = 'unlimited';
+  document.getElementById('eosYears').value = '';
+  document.getElementById('eosMonths').value = '0';
+  document.getElementById('eosDays').value = '0';
+  document.getElementById('eosResult').style.display = 'none';
+  checkEosFields();
+};
+
+window.calcEOS = function() {
+  const salary = parseFloat(document.getElementById('eosSalary').value);
+  const type = document.getElementById('eosContract').value;
+  const reason = document.getElementById('eosReason').value;
+
+  const years = parseInt(document.getElementById('eosYears').value) || 0;
+  const months = parseInt(document.getElementById('eosMonths').value) || 0;
+  const days = parseInt(document.getElementById('eosDays').value) || 0;
+
+  if (!salary || salary <= 0 || !reason || (!years && years !== 0)) {
+    if(typeof showToast === 'function') showToast('الرجاء تعبئة الحقول الإجبارية', 'error');
+    else alert('الرجاء تعبئة الحقول الإجبارية (*)');
+    return;
+  }
+
+  const totalYears = years + (months / 12) + (days / 365.25);
+
+  let baseReward = 0;
+  if (totalYears <= 5) {
+    baseReward = totalYears * (salary / 2);
+  } else {
+    baseReward = (5 * (salary / 2)) + ((totalYears - 5) * salary);
+  }
+
+  let finalReward = baseReward;
+
+  if (reason === 'article_80' || reason === 'probation') {
+    finalReward = 0;
+  } else if (reason === 'resign') {
+    if (totalYears < 2) {
+      finalReward = 0;
+    } else if (totalYears >= 2 && totalYears < 5) {
+      finalReward = baseReward / 3;
+    } else if (totalYears >= 5 && totalYears < 10) {
+      finalReward = (baseReward * 2) / 3;
+    } else {
+      finalReward = baseReward;
+    }
+  } else {
+    finalReward = baseReward;
+  }
+
+  const totalStr = finalReward.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits:2});
+  document.getElementById('eosTotal').innerText = totalStr;
+
+  let durationStr = [];
+  if (years > 0) durationStr.push(`${years} سنة`);
+  if (months > 0) durationStr.push(`${months} شهر`);
+  if (days > 0) durationStr.push(`${days} يوم`);
+  if (durationStr.length === 0) durationStr.push('0 يوم');
+
+  const formattedDurationStr = durationStr.join(' و ');
+
+  document.getElementById('eosDetails').innerHTML = `المكافأة المدفوعة مقابل دامت: ${formattedDurationStr}`;
+  document.getElementById('eosResult').style.display = 'block';
+};
+
+window.printEOS = function() {
+  const salary = document.getElementById('eosSalary').value;
+  const contract = document.getElementById('eosContract').options[document.getElementById('eosContract').selectedIndex].text;
+  const reason = document.getElementById('eosReason').options[document.getElementById('eosReason').selectedIndex].text;
+  const years = document.getElementById('eosYears').value || '0';
+  const months = document.getElementById('eosMonths').value || '0';
+  const days = document.getElementById('eosDays').value || '0';
+  const total = document.getElementById('eosTotal').innerText;
+  const details = document.getElementById('eosDetails').innerText;
+
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <html dir="rtl" lang="ar">
+    <head>
+      <title>طباعة حاسبة مكافأة نهاية الخدمة</title>
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+        body { 
+          font-family: 'Tajawal', sans-serif; 
+          padding: 40px; 
+          color: #111;
+          max-width: 800px;
+          margin: 0 auto;
+        }
+        .header { text-align: center; margin-bottom: 40px; }
+        .header h1 { font-size: 28px; font-weight: 800; color: #1f2937; margin-bottom: 15px; }
+        .header p { color: #4b5563; font-size: 16px; margin: 0 0 8px 0; font-weight: 500; }
+        .header .disclaimer { color: #d97706; font-size: 15px; font-weight: 500; }
+
+        .field-group { margin-bottom: 24px; }
+        .field-label { 
+          display: block; 
+          text-align: right; 
+          font-weight: 700; 
+          color: #111; 
+          margin-bottom: 10px;
+          font-size: 15px;
+        }
+        .field-value {
+          background-color: #f3f4f6;
+          padding: 14px 20px;
+          border-radius: 6px;
+          text-align: right;
+          font-weight: 500;
+          color: #1f2937;
+          font-size: 16px;
+        }
+
+        .result-box {
+          border: 1px solid #d1d5db;
+          border-radius: 12px;
+          padding: 30px;
+          text-align: center;
+          margin-top: 40px;
+        }
+        .result-box h2 {
+          font-size: 20px;
+          font-weight: 800;
+          color: #111;
+          margin: 0 0 15px 0;
+        }
+        .result-box .amt {
+          font-size: 22px;
+          font-weight: 500;
+          color: #4b5563;
+          margin-bottom: 15px;
+        }
+        .result-box .dur {
+          color: #4b5563;
+          font-size: 16px;
+          font-weight: 500;
+        }
+
+        @media print {
+          body { -webkit-print-color-adjust: exact; padding: 20px; }
+        }
+      
+
+    
+    
+    
+
+    .hijri-input {
+      background-color: transparent !important;
+      color: var(--txt) !important;
+    }
+
+  </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>حاسبة مكافأة نهاية الخدمة</h1>
+        <p>أدخل التفاصيل الخاصة بمدة الخدمة لاحتساب قيمة مكافأة نهاية الخدمة .</p>
+        <p class="disclaimer">* يرجى العلم بأن الحاسبة مطابقة لنتائج حاسبة وزارة الموارد البشرية والتنمية الاجتماعية</p>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">الراتب الأساسي</div>
+        <div class="field-value">${salary}</div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">نوع العقد</div>
+        <div class="field-value">${contract}</div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">سبب انتهاء العلاقة العمالية</div>
+        <div class="field-value">${reason}</div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">عدد سنوات الخدمة</div>
+        <div class="field-value">${years}</div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">عدد اشهر الخدمة</div>
+        <div class="field-value">${months}</div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">عدد ايام الخدمة</div>
+        <div class="field-value">${days}</div>
+      </div>
+
+      <div class="result-box">
+        <h2>توقع أن تتلقى</h2>
+        <div class="amt">${total} ريال سعودي</div>
+        <div class="dur">${details}</div>
+      </div>
+
+      <script>
+        window.onload = function() { window.print(); window.close(); }
+      <` + `/script>
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
+};
+
+
+// --- Date Converter Logic ---
+window.hijriToGregorian = function(y, m, d) {
+  let gY = Math.floor((y * 0.970229) + 622.54);
+  let gM = Math.floor(m - 1); 
+  let guess = new Date(gY, gM, 1);
+
+  const formatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', {
+    day: 'numeric', month: 'numeric', year: 'numeric'
+  });
+
+  for(let i = -60; i < 60; i++) {
+    let testDate = new Date(guess.getTime() + i * 24 * 60 * 60 * 1000);
+    let parts = formatter.formatToParts(testDate);
+    let ty = parseInt(parts.find(p => p.type === 'year').value);
+    let tm = parseInt(parts.find(p => p.type === 'month').value);
+    let td = parseInt(parts.find(p => p.type === 'day').value);
+
+    if (ty === y && tm === m && td === d) return testDate;
+  }
+  for(let i = -365; i < 365; i++) {
+    let testDate = new Date(guess.getTime() + i * 24 * 60 * 60 * 1000);
+    let parts = formatter.formatToParts(testDate);
+    let ty = parseInt(parts.find(p => p.type === 'year').value);
+    let tm = parseInt(parts.find(p => p.type === 'month').value);
+    let td = parseInt(parts.find(p => p.type === 'day').value);
+
+    if (ty === y && tm === m && td === d) return testDate;
+  }
+  return null;
+};
+
+  // تعبئة أيام الهجري من 1 إلى 30
+  document.addEventListener('DOMContentLoaded', () => {
+    const hd = document.getElementById('hijriDay');
+    if (hd) {
+      for (let i = 1; i <= 30; i++) {
+        let opt = document.createElement('option');
+        opt.style.backgroundColor = 'var(--bg2)';
+        opt.style.color = 'var(--txt)';
+        opt.value = i;
+        opt.innerText = i.toString().padStart(2, '0');
+        hd.appendChild(opt);
+      }
+    }
+  });
+
+  window.convertDate = function(dir) {
+  if(dir === 'greg') {
+    const d = new Date(document.getElementById('convGreg').value);
+    if(isNaN(d)) return;
+    try {
+      const numFormatter = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', {
+        day: '2-digit', month: '2-digit', year: 'numeric'
+      });
+      const textFormatter = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', {
+        month: 'long'
+      });
+
+      let parts = numFormatter.formatToParts(d);
+      let y = parts.find(p => p.type === 'year').value;
+      let m = parts.find(p => p.type === 'month').value;
+      let day = parts.find(p => p.type === 'day').value;
+
+      document.getElementById('resHijriNum').innerText = `${day} / ${m} / ${y}`;
+      document.getElementById('resHijriText').innerText = textFormatter.format(d);
+    } catch(e) {
+      document.getElementById('resHijriNum').innerText = "خطأ";
+    }
+  } else if (dir === 'hijri') {
+    let hd = document.getElementById('hijriDay').value;
+    let hm = document.getElementById('hijriMonth').value;
+    let hy = document.getElementById('hijriYear').value;
+    if(!hd || !hm || !hy) return;
+    let y = parseInt(hy);
+    let m = parseInt(hm);
+    let d = parseInt(hd);
+
+    let gDate = window.hijriToGregorian(y, m, d);
+    if (gDate) {
+      const numFormatter = new Intl.DateTimeFormat('en-US', {
+        day: '2-digit', month: '2-digit', year: 'numeric'
+      });
+      const textFormatter = new Intl.DateTimeFormat('ar-SA', {
+        month: 'long'
+      });
+
+      let parts = numFormatter.formatToParts(gDate);
+      let gy = parts.find(p => p.type === 'year').value;
+      let gm = parts.find(p => p.type === 'month').value;
+      let gd = parts.find(p => p.type === 'day').value;
+
+      document.getElementById('resGregNum').innerText = `${gd} / ${gm} / ${gy}`;
+      document.getElementById('resGregText').innerText = textFormatter.format(gDate);
+    } else {
+      document.getElementById('resGregNum').innerText = "تاريخ غير صحيح";
+      document.getElementById('resGregText').innerText = "-";
+    }
+  }
+
+};
+
+</script>
+
+
+
+  <div class="footer-credits">
+    <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 6px; color: var(--acc);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        تصميم وتطوير: <span>عبدالله الزهراني</span> &copy; 2026
+      </div>
+      <span class="footer-sep" style="color: var(--border-2);">|</span>
+      <a href="mailto:amsazahrani@sraco.com.sa" class="footer-email" title="مراسلة عبر البريد الإلكتروني">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+        <span style="font-family: 'Segoe UI', monospace; margin-right: 6px; letter-spacing: 0.3px;" dir="ltr">amsazahrani@sraco.com.sa</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="toast-host" id="toastHost" style="display:none;"><div class="toast-stack" id="toastStack"></div></div>
+
+</body>
+</html>
