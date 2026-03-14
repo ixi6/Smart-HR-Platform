@@ -515,12 +515,12 @@
     /* --- Top Navigation Tabs --- */
     .top-tabs-container {
       display: flex;
-      gap: 8px;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
       margin-bottom: 24px;
       padding-bottom: 16px;
       border-bottom: 1px solid var(--border);
-      overflow-x: auto;
-      scrollbar-width: none;
     }
     .top-tabs-container::-webkit-scrollbar { display: none; }
 
@@ -528,7 +528,7 @@
       background: transparent;
       color: var(--muted);
       border: 1px solid var(--border);
-      padding: 10px 16px;
+      padding: 10px 20px;
       border-radius: 12px;
       font-family: inherit;
       font-size: 0.95rem;
@@ -536,9 +536,45 @@
       cursor: pointer;
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 8px;
       white-space: nowrap;
       transition: all 0.2s ease;
+    }
+    
+    @media (max-width: 768px) {
+      .top-tab {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+      }
+    }
+
+    /* في شاشات الجوال، يمكننا تصغير الخط قليلاً لتتسع */
+    @media (max-width: 600px) {
+      .top-tab {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+    
+    @media (max-width: 768px) {
+      .top-tab {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+      }
+    }
     }
     .top-tab:hover {
       background: rgba(255,255,255,0.05);
@@ -1044,6 +1080,10 @@ window.exportToXLSX = function() {
   }
 
 </script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";</script>
 </head>
 <body>
   <div class="bg-blobs" aria-hidden="true">
@@ -1120,6 +1160,20 @@ window.exportToXLSX = function() {
       <button class="top-tab" onclick="switchInnerTab('content-converter', this)">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
         تحويل التاريخ
+      </button>
+
+      <!-- إجبار النظام على النزول لسطر جديد بعد الزر الرابع مباشرة -->
+      <div style="flex-basis: 100%; height: 0; margin: 0; padding: 0;"></div>
+
+      <button class="top-tab" onclick="switchInnerTab('content-file-converter', this)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        أدوات الملفات
       </button>
     </div>
 
@@ -1705,6 +1759,120 @@ window.exportToXLSX = function() {
       </div>
     </div>
 
+
+
+    <!-- 5. File Converter Tab -->
+    <div id="content-file-converter" class="tab-content">
+      <div class="heading" style="margin-bottom:20px; justify-content:flex-start;">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+        </svg>
+        <h2 style="font-size:1.4rem; color:var(--txt); margin:0; margin-right:10px;">تحويل صيغ الملفات واستخراج الجداول</h2>
+      </div>
+
+      <div class="calc-box" style="margin-top:0;">
+        <h3 style="margin-top:0; color:var(--acc); font-size:1.1rem;">استخراج جدول من صورة (إلى Excel)</h3>
+        <div class="hrsd-grid">
+          <div class="hrsd-group">
+            <label>محرك الاستخراج (اختر الدقة)</label>
+            <div class="hrsd-input-wrapper">
+              <select id="ocrEngineSelect" onchange="window.fileTools.toggleApiInput()">
+                <option value="local">محلي (Tesseract - مجاني)</option>
+                <option value="openai">OpenAI (GPT-4o - دقة عالية)</option>
+                <option value="gemini">Google Gemini (دقة عالية - مفتاح مجاني)</option>
+              </select>
+            </div>
+          </div>
+          <div class="hrsd-group" id="apiKeyGroup" style="display: none;">
+            <label>مفتاح API الخاص بك (sk-...)</label>
+            <div class="hrsd-input-wrapper">
+              <input type="password" id="openaiApiKey" placeholder="أدخل المفتاح هنا">
+            </div>
+          </div>
+        </div>
+
+        <div class="hrsd-group">
+          <label>ارفع صورة الجدول</label>
+          <div class="hrsd-input-wrapper" style="padding: 5px;">
+            <input type="file" id="tableImageInput" accept="image/*">
+          </div>
+        </div>
+
+        <button class="btn-primary" id="extractTableBtn" onclick="window.fileTools.processTableExtraction()">بدء الاستخراج</button>
+
+        <div id="tableLog" class="result-sub" style="margin-top:15px; font-family:monospace; display:none; text-align:right;"></div>
+
+        <div id="tableDownloadBox" class="hrsd-result-box" style="display:none; margin-top:15px; padding:15px; text-align:center;">
+          <a id="tableDownloadLink" download="Extracted_Table.xlsx" style="text-decoration:none; color:#000; background:var(--ok); padding:10px 20px; border-radius:8px; font-weight:bold; display:inline-block; cursor:pointer;">⬇️ تحميل ملف Excel</a>
+        </div>
+      </div>
+
+      <div class="calc-box" style="margin-top:20px;">
+        <h3 style="margin-top:0; color:var(--acc); font-size:1.1rem;">محول الملفات الذكي</h3>
+        <div class="hrsd-grid">
+          <div class="hrsd-group">
+            <label id="uploadLabel">ارفع الملف (PDF, JPG, PNG, WEBP...)</label>
+            <div class="hrsd-input-wrapper" style="padding: 5px;">
+              <input type="file" id="generalImageInput" accept="image/*, application/pdf" onchange="window.fileTools.handleFileSelect()">
+            </div>
+          </div>
+          <div class="hrsd-group">
+            <label>تحويل إلى</label>
+            <div class="hrsd-input-wrapper">
+              <select id="generalImageFormat" disabled>
+                <option value="">اختر ملفاً أولاً...</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <button class="btn-primary" id="convertImageBtn" onclick="window.fileTools.processImageConversion()" disabled style="background:var(--muted); color:#fff;">تحويل الملف</button>
+        <canvas id="hiddenCanvas" style="display: none;"></canvas>
+
+        <div id="imageDownloadBox" class="hrsd-result-box" style="display:none; margin-top:15px; padding:15px; text-align:center;">
+          <a id="imageDownloadLink" download style="text-decoration:none; color:#000; background:var(--acc); padding:10px 20px; border-radius:8px; font-weight:bold; display:inline-block; cursor:pointer;">⬇️ تحميل الملف الجديد</a>
+        </div>
+      </div>
+
+      <div class="calc-box" style="margin-top:20px;">
+        <h3 style="margin-top:0; color:var(--acc); font-size:1.1rem;">أداة ضغط ملفات PDF</h3>
+        <p style="font-size:0.85rem; color:var(--muted); margin-bottom:15px;">تعمل هذه الأداة على تقليل حجم ملفات الـ PDF الممسوحة ضوئياً (السكانر) والملفات التي تحتوي على صور عبر المتصفح مباشرة لضمان خصوصيتك.</p>
+        <div class="hrsd-grid">
+          <div class="hrsd-group">
+            <label>ارفع ملف PDF</label>
+            <div class="hrsd-input-wrapper" style="padding: 5px;">
+              <input type="file" id="pdfCompressInput" accept="application/pdf" onchange="window.fileTools.handlePDFUpload()">
+            </div>
+          </div>
+          <div class="hrsd-group">
+            <label>جودة الضغط (دقة الصورة)</label>
+            <div class="hrsd-input-wrapper">
+              <select id="pdfCompressionQuality">
+                <option value="0.3">أقصى ضغط - 30% (حجم صغير جداً)</option>
+                <option value="0.5">منخفضة - 50% (توازن جيد)</option>
+                <option value="0.7" selected>متوسطة - 70% (موصى بها)</option>
+                <option value="0.85">عالية - 85% (أفضل جودة)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 0.9rem;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <span>الحجم الأصلي:</span>
+            <span id="originalPdfSize" style="color: var(--acc); font-weight: bold;">-</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span>الحجم المتوقع:</span>
+            <span id="compressedPdfSize" style="color: var(--success); font-weight: bold;">-</span>
+          </div>
+        </div>
+        <button class="btn-primary" id="compressPdfBtn" onclick="window.fileTools.compressPDF()" disabled style="background:var(--muted); color:#fff;">ضغط ملف PDF</button>
+
+        <div id="pdfDownloadBox" class="hrsd-result-box" style="display:none; margin-top:15px; padding:15px; text-align:center;">
+          <a id="pdfDownloadLink" download style="text-decoration:none; color:#000; background:var(--acc); padding:10px 20px; border-radius:8px; font-weight:bold; display:inline-block; cursor:pointer;">⬇️ تحميل PDF المضغوط</a>
+        </div>
+      </div>
+    </div>
 
 </main>
 
@@ -2538,6 +2706,408 @@ window.hijriToGregorian = function(y, m, d) {
     }
   }
 
+};
+
+
+
+// ==========================================
+// منطق تحويل الملفات واستخراج الجداول (معزول لعدم تداخل المتغيرات)
+// ==========================================
+window.fileTools = {
+    toggleApiInput: function() {
+        const engine = document.getElementById('ocrEngineSelect').value;
+        const keyGroup = document.getElementById('apiKeyGroup');
+        const keyInput = document.getElementById('openaiApiKey');
+
+        if (engine === 'openai') {
+            keyGroup.style.display = 'block';
+            keyInput.placeholder = 'أدخل مفتاح OpenAI (sk-...)';
+        } else if (engine === 'gemini') {
+            keyGroup.style.display = 'block';
+            keyInput.placeholder = 'أدخل مفتاح Google Gemini (AIza...)';
+        } else {
+            keyGroup.style.display = 'none';
+        }
+    },
+
+    processTableExtraction: async function() {
+        const fileInput = document.getElementById('tableImageInput').files[0];
+        if (!fileInput) { 
+            if(typeof showToast === 'function') showToast('الرجاء اختيار صورة الجدول أولاً!', 'error'); 
+            else alert('الرجاء اختيار صورة الجدول أولاً!');
+            return; 
+        }
+
+        const engine = document.getElementById('ocrEngineSelect').value;
+        const btn = document.getElementById('extractTableBtn');
+        const logBox = document.getElementById('tableLog');
+        const dlBox = document.getElementById('tableDownloadBox');
+
+        btn.disabled = true;
+        logBox.style.display = 'block';
+        dlBox.style.display = 'none';
+
+        try {
+            if (engine === 'local') {
+                logBox.innerText = "⏳ جاري تحليل الصورة محلياً عبر Tesseract...";
+                const worker = await Tesseract.createWorker('ara+eng');
+                const { data: { text } } = await worker.recognize(fileInput);
+                await worker.terminate();
+
+                logBox.innerText = "⏳ جاري بناء ملف الإكسيل...";
+                const lines = text.split('\n').filter(line => line.trim().length > 0);
+                const tableArray = lines.map(line => line.split(/\s{2,}/)); 
+
+                const worksheet = window.XLSX.utils.aoa_to_sheet(tableArray);
+                this.buildTableExcelFile(worksheet);
+
+            } else if (engine === 'openai' || engine === 'gemini') {
+                const apiKey = document.getElementById('openaiApiKey').value.trim();
+                if (!apiKey) { throw new Error("الرجاء إدخال مفتاح الـ API الخاص بالذكاء الاصطناعي!"); }
+
+                logBox.innerText = "⏳ جاري إرسال الصورة لخوادم الذكاء الاصطناعي...";
+                const base64Data = await new Promise((res, rej) => {
+                    const reader = new FileReader();
+                    reader.onload = () => res(reader.result);
+                    reader.onerror = error => rej(error);
+                    reader.readAsDataURL(fileInput);
+                });
+
+                // Get mime type and raw base64
+                const mimeType = base64Data.split(';')[0].split(':')[1];
+                const rawBase64 = base64Data.split(',')[1];
+                let resultText = "";
+
+                if (engine === 'openai') {
+                    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+                        body: JSON.stringify({
+                            model: "gpt-4o",
+                            messages: [{
+                                role: "user",
+                                content: [
+                                    { type: "text", text: "استخرج الجدول من هذه الصورة. أرجع لي النتيجة بصيغة CSV فقط. استخدم الفاصلة (,) للأعمدة. لا تكتب أي كلام آخر غير الجدول." },
+                                    { type: "image_url", image_url: { url: base64Data } }
+                                ]
+                            }]
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        console.error("OpenAI Error:", errText);
+                        throw new Error("خطأ من OpenAI: " + (JSON.parse(errText).error?.message || "تأكد من صحة المفتاح."));
+                    }
+                    const data = await response.json();
+                    resultText = data.choices[0].message.content;
+                } 
+                else if (engine === 'gemini') {
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+                    const response = await fetch(url, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [
+                                    { text: "استخرج الجدول من هذه الصورة. أرجع لي النتيجة بصيغة CSV فقط. استخدم الفاصلة (,) للأعمدة. لا تكتب أي كلام آخر غير الجدول، ولا تضع علامات توضيحية." },
+                                    { inline_data: { mime_type: mimeType, data: rawBase64 } }
+                                ]
+                            }]
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        console.error("Gemini Error:", errText);
+                        throw new Error("خطأ من Gemini: " + (JSON.parse(errText).error?.message || "تأكد من صحة المفتاح."));
+                    }
+                    const data = await response.json();
+                    if(!data.candidates || data.candidates.length === 0) throw new Error("فشل استخراج البيانات من Gemini.");
+                    resultText = data.candidates[0].content.parts[0].text;
+                }
+
+                // Clean CSV format from markdown blocks
+                resultText = resultText.replace(/```csv/g, "").replace(/```/g, "").trim();
+
+                logBox.innerText = "⏳ جاري بناء ملف الإكسيل...";
+                const workbookTemp = window.XLSX.read(resultText, {type: 'string'});
+                const worksheet = workbookTemp.Sheets[workbookTemp.SheetNames[0]];
+                this.buildTableExcelFile(worksheet);
+            }
+
+            logBox.innerText = "✅ اكتمل الاستخراج بنجاح!";
+            if(typeof showToast === 'function') showToast('تم استخراج الجدول بنجاح!', 'success');
+            btn.disabled = false;
+
+        } catch (error) {
+            logBox.innerText = `❌ خطأ: ${error.message}`;
+            if(typeof showToast === 'function') showToast(error.message, 'error');
+            btn.disabled = false;
+        }
+    },
+
+    buildTableExcelFile: function(worksheet) {
+        const workbook = window.XLSX.utils.book_new();
+        window.XLSX.utils.book_append_sheet(workbook, worksheet, "Table Data");
+        const excelBuffer = window.XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+        const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+        const url = window.URL.createObjectURL(data);
+        const dlLink = document.getElementById('tableDownloadLink');
+        dlLink.href = url;
+        document.getElementById('tableDownloadBox').style.display = 'block';
+    },
+
+    handlePDFUpload: function() {
+        const file = document.getElementById('pdfCompressInput').files[0];
+        const btn = document.getElementById('compressPdfBtn');
+        const sizeDisplay = document.getElementById('originalPdfSize');
+
+        if(!file) {
+            btn.disabled = true;
+            btn.style.background = 'var(--muted)';
+            sizeDisplay.innerText = '-';
+            document.getElementById('compressedPdfSize').innerText = '-';
+            return;
+        }
+
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        sizeDisplay.innerText = sizeMB + ' MB';
+
+        // Estimate compressed size based on quality
+        const quality = parseFloat(document.getElementById('pdfCompressionQuality').value);
+        const estimatedSize = (file.size * quality / (1024 * 1024)).toFixed(2);
+        document.getElementById('compressedPdfSize').innerText = estimatedSize + ' MB';
+
+        btn.disabled = false;
+        btn.style.background = 'var(--acc)';
+        btn.style.color = '#000';
+
+        // Update estimate when quality changes
+        document.getElementById('pdfCompressionQuality').onchange = function() {
+            const newQuality = parseFloat(this.value);
+            const newEstimate = (file.size * newQuality / (1024 * 1024)).toFixed(2);
+            document.getElementById('compressedPdfSize').innerText = newEstimate + ' MB';
+        };
+    },
+
+    compressPDF: async function() {
+        const file = document.getElementById('pdfCompressInput').files[0];
+        const quality = parseFloat(document.getElementById('pdfCompressionQuality').value);
+        const btn = document.getElementById('compressPdfBtn');
+
+        if (!file) {
+            alert('يرجى اختيار ملف PDF أولاً');
+            return;
+        }
+
+        btn.innerText = 'جاري الضغط... يرجى الانتظار';
+        btn.disabled = true;
+
+        try {
+            // Load PDF.js library dynamically if not loaded
+            if (typeof pdfjsLib === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js';
+                document.head.appendChild(script);
+
+                await new Promise((resolve, reject) => {
+                    script.onload = resolve;
+                    script.onerror = reject;
+                });
+
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+            }
+
+            // Read PDF file
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+            // Create new jsPDF instance
+            if (typeof window.jspdf === 'undefined') {
+                const jspdfScript = document.createElement('script');
+                jspdfScript.src = 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js';
+                document.head.appendChild(jspdfScript);
+
+                await new Promise((resolve, reject) => {
+                    jspdfScript.onload = resolve;
+                    jspdfScript.onerror = reject;
+                });
+            }
+
+            const { jsPDF } = window.jspdf;
+            const newPdf = new jsPDF();
+            let firstPage = true;
+
+            // Process each page
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const viewport = page.getViewport({ scale: quality * 1.5 });
+
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+
+                await page.render({
+                    canvasContext: context,
+                    viewport: viewport
+                }).promise;
+
+                const imgData = canvas.toDataURL('image/jpeg', quality);
+
+                if (!firstPage) {
+                    newPdf.addPage();
+                }
+                firstPage = false;
+
+                const pdfWidth = newPdf.internal.pageSize.getWidth();
+                const pdfHeight = newPdf.internal.pageSize.getHeight();
+                const imgWidth = viewport.width;
+                const imgHeight = viewport.height;
+                const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+
+                const imgX = (pdfWidth - imgWidth * ratio) / 2;
+                const imgY = 0;
+
+                newPdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+            }
+
+            // Generate compressed PDF
+            const pdfBlob = newPdf.output('blob');
+            const compressedSizeMB = (pdfBlob.size / (1024 * 1024)).toFixed(2);
+            document.getElementById('compressedPdfSize').innerText = compressedSizeMB + ' MB';
+
+            // Create download link
+            const url = URL.createObjectURL(pdfBlob);
+            const downloadLink = document.getElementById('pdfDownloadLink');
+            downloadLink.href = url;
+            downloadLink.download = file.name.replace('.pdf', '_compressed.pdf');
+
+            document.getElementById('pdfDownloadBox').style.display = 'block';
+
+            btn.innerText = 'ضغط ملف PDF';
+            btn.disabled = false;
+
+        } catch (error) {
+            console.error('Error compressing PDF:', error);
+            alert('حدث خطأ أثناء ضغط الملف: ' + error.message);
+            btn.innerText = 'ضغط ملف PDF';
+            btn.disabled = false;
+        }
+    },
+
+    handleFileSelect: function() {
+        const file = document.getElementById('generalImageInput').files[0];
+        const formatSelect = document.getElementById('generalImageFormat');
+        const btn = document.getElementById('convertImageBtn');
+        const uploadLabel = document.getElementById('uploadLabel');
+
+        if(!file) {
+            formatSelect.innerHTML = '<option value="">اختر ملفاً أولاً...</option>';
+            formatSelect.disabled = true;
+            btn.disabled = true;
+            btn.style.background = 'var(--muted)';
+            return;
+        }
+
+        // Show file name
+        uploadLabel.innerText = "الملف: " + (file.name.length > 20 ? file.name.substring(0, 20) + '...' : file.name);
+
+        const type = file.type || file.name.split('.').pop().toLowerCase();
+        let options = '';
+
+        if (type === 'application/pdf' || type === 'pdf') {
+            options += '<optgroup label="من PDF إلى صور">';
+            options += '<option value="image/png">إلى PNG (دقة عالية)</option>';
+            options += '<option value="image/jpeg">إلى JPG</option>';
+            options += '<option value="image/webp">إلى WEBP</option>';
+            options += '</optgroup>';
+        } else if (type.startsWith('image/')) {
+            options += '<optgroup label="تحويل صيغة الصورة">';
+            if(type !== 'image/png') options += '<option value="image/png">إلى PNG</option>';
+            if(type !== 'image/jpeg') options += '<option value="image/jpeg">إلى JPG</option>';
+            if(type !== 'image/webp') options += '<option value="image/webp">إلى WEBP</option>';
+            if(type !== 'image/gif') options += '<option value="image/gif">إلى GIF</option>';
+            options += '</optgroup>';
+        } else {
+            options += '<option value="">الصيغة غير مدعومة للتحويل المباشر</option>';
+            formatSelect.disabled = true;
+            btn.disabled = true;
+            return;
+        }
+
+        formatSelect.innerHTML = options;
+        formatSelect.disabled = false;
+
+        btn.disabled = false;
+        btn.style.background = 'var(--acc)';
+        btn.style.color = '#000';
+    },
+
+    processImageConversion: async function() {
+        const file = document.getElementById('generalImageInput').files[0];
+        if(!file) return;
+
+        const btn = document.getElementById('convertImageBtn');
+        btn.disabled = true;
+        btn.innerText = "⏳ جاري المعالجة...";
+
+        const format = document.getElementById('generalImageFormat').value;
+        const extension = format.split('/')[1];
+        const canvas = document.getElementById('hiddenCanvas');
+        const ctx = canvas.getContext('2d');
+
+        try {
+            if (file.type === 'application/pdf') {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+                const page = await pdf.getPage(1); // Get first page
+
+                const viewport = page.getViewport({ scale: 2.0 }); // High resolution
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+
+                await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+
+                this.downloadCanvas(canvas, format, extension);
+            } else {
+                const img = new Image();
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        ctx.drawImage(img, 0, 0);
+                        window.fileTools.downloadCanvas(canvas, format, extension);
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        } catch (err) {
+            console.error(err);
+            if(typeof showToast === 'function') showToast('حدث خطأ أثناء التحويل', 'error');
+            btn.disabled = false;
+            btn.innerText = "تحويل الصورة";
+        }
+    },
+
+    downloadCanvas: function(canvas, format, extension) {
+        const dataUrl = canvas.toDataURL(format, 0.9);
+        const dlBtn = document.getElementById('imageDownloadLink');
+        dlBtn.href = dataUrl;
+        dlBtn.download = `converted_file.${extension}`;
+        document.getElementById('imageDownloadBox').style.display = 'block';
+
+        const btn = document.getElementById('convertImageBtn');
+        btn.innerText = "تم التحويل ✅";
+        btn.style.background = 'var(--muted)';
+        btn.style.color = '#fff';
+
+        if(typeof showToast === 'function') showToast('تم تجهيز الملف للتحميل', 'success');
+    }
 };
 
 </script>
